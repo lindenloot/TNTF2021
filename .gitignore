@@ -1,2 +1,5 @@
-*.csv
+__pycache__
+trial list prescan
+trial list postscan
+trial list scanner
 *.jpg

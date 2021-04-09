@@ -50,7 +50,7 @@ for block in ["eval_TNT_prescan", "learning_TNT_prescan",
     # Get path to folder beloning to the current experimental phase
     # (prescan, scanner, postscan)
     exp_phase = block.split("_")[-1]
-    dst = "trial list %s/block loops TNT %s" % (exp_phase, exp_phase)
+    dst = "trial list %s" % (exp_phase)
     
     for pp_ID in range(1, 71):
 
