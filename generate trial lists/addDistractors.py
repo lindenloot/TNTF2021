@@ -33,6 +33,7 @@ def combine(dm, l_neg_dist1,l_neg_dist2 ,l_neu_dist1 ,l_neu_dist2):
         target_emotion = row.Emotion
         trial_id = row.Trial_ID
         target_object = row.Object
+        exp_id = row.Exp_ID
         
         print("valence = ", target_emotion)
         #sys.exit()
@@ -54,17 +55,15 @@ def combine(dm, l_neg_dist1,l_neg_dist2 ,l_neu_dist1 ,l_neu_dist2):
         else:
             raise Exception("Unknown valence category")
     
-
         # Add info to the trial_dm:
-        trial_dm["distractor_scene_1"] = dist1
-        trial_dm["distractor_scene_2"] = dist2
+        trial_dm["distractor_1"] = dist1
+        trial_dm["distractor_2"] = dist2
         trial_dm["Scene"] = target_scene
         trial_dm["Emotion"] = target_emotion
         trial_dm["Trial_ID"] = trial_id
         trial_dm["Object"] = target_object
+        trial_dm["Exp_ID"] = exp_id
         
-        
-    
         # Merge the current trial to the big dm:
         new_dm_exp = new_dm_exp << trial_dm
     
@@ -85,6 +84,15 @@ def addDistractors(dm):
     new_dm        --- a DataMatrix instance with distractors
     """
     
+    exp_ID = dm["Exp_ID"][0]
+    
+    if exp_ID == "TNT_memory_prescan":
+        target_type = "Scene"
+    elif exp_ID == "IMDF_memory_postscan":
+        target_type = "Object"
+    else:
+        raise Exception("Unknown exp ID: %s" % exp_ID)
+        
     # Shuffle the dm:
     dm = ops.shuffle(dm)
     
@@ -93,22 +101,22 @@ def addDistractors(dm):
     neu_dm = dm.Emotion == "neu"
     
     # Make a list of potential scenes for negative distractor 1
-    L_NEG_DIST1 = list(neg_dm.Scene)
+    L_NEG_DIST1 = list(neg_dm[target_type])
     # and negative distractor 2
-    L_NEG_DIST2 = list(neg_dm.Scene)
+    L_NEG_DIST2 = list(neg_dm[target_type])
     
     # Make a list of potential scenes for neutral distractor 1
-    L_NEU_DIST1 = list(neu_dm.Scene)
+    L_NEU_DIST1 = list(neu_dm[target_type])
     # and 2
-    L_NEU_DIST2 = list(neu_dm.Scene)
+    L_NEU_DIST2 = list(neu_dm[target_type])
 
     new_dm = combine(dm, L_NEG_DIST1[:], L_NEG_DIST2[:], L_NEU_DIST1[:], L_NEU_DIST2[:])
 
     # Make sure target, distractor 1 and distractor 2 are different scenes:
     while any(
-        row.distractor_scene_1 == row.distractor_scene_2 or
-        row.distractor_scene_1 == row.Scene or
-        row.distractor_scene_2 == row.Scene
+        row["distractor_1"] == row["distractor_2"] or
+        row["distractor_1"] == row[target_type] or
+        row["distractor_2"] == row[target_type]
         for row in new_dm
         ):
         # If not, try again:
@@ -121,8 +129,10 @@ def addDistractors(dm):
 
 if __name__ == "__main__":
     
-    # Read dm containing stimuli without distractors:
-    dm_exp = io.readtxt('dm_exp.csv')
+    exp = "TNT memorytest prescan"
     
-    dm_final = addDistractors(dm_exp)
-    io.writetxt(dm_final, "./trial_list.csv")
+    # Read dm containing stimuli without distractors:
+    dm_exp = io.readtxt('TNT_pairs_exp.csv')
+    dm_exp["Exp_ID"] = exp
+    dm_new = addDistractors(dm_exp)
+    io.writetxt(dm_new, "test-distractors.csv")
