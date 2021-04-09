@@ -1,5 +1,0 @@
-condition,null_ID,neu_ID,neg_ID,T_ID,NT_ID,Object,Scene,filler,Emotion,pair_ID,exp_ID
-TneuFILLER,97,74,9999,9999,74,pingpongracket.jpg,neutral_053.jpg,yes,neu,filler,TNT_scanner
-TnegFILLER,98,999,74,9999,75,microscope.jpg,Objects_283_hsad.jpg,yes,neg,filler,TNT_scanner
-NTneuFILLER,99,75,9999,74,9999,fryingpan02a.jpg,neutral_066.jpg,yes,neu,filler,TNT_scanner
-NTnegFILLER,100,999,75,75,9999,brick.jpg,Objects_106_vdisgust.jpg,yes,neg,filler,TNT_scanner

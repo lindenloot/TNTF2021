@@ -1,0 +1,1324 @@
+---
+API: 2.1
+OpenSesame: 3.3.9a4
+Platform: posix
+---
+set width 1024
+set uniform_coordinates yes
+set title TNT_prelab
+set subject_parity even
+set subject_nr 0
+set start experiment
+set sound_sample_size -16
+set sound_freq 48000
+set sound_channels 2
+set sound_buf_size 1024
+set sampler_backend psycho
+set round_decimals 2
+set mouse_backend psycho
+set keyboard_backend psycho
+set height 768
+set fullscreen no
+set form_clicks no
+set foreground black
+set font_underline no
+set font_size 20
+set font_italic no
+set font_family mono
+set font_bold no
+set experiment_path "/home/lotje/Documents/Research, teaching and programming/OpenSesame/Scripts/Others/Claudius Schroeder/experimental files"
+set disable_garbage_collection yes
+set description "A template containing a practice and an experimental phase"
+set coordinates uniform
+set compensation 0
+set color_backend psycho
+set clock_backend psycho
+set canvas_backend psycho
+set bidi yes
+set background grey
+
+define notepad CHANGELOG
+	__note__
+	# 2021-02-25:
+	
+	- Added newly scaled images (for dimensions see CHANGELOG in pretest)
+	- Made scaling factors variable
+	- Only mouse clicks are accepted when pp click on ROI in:
+	    - IMDF_recall_sceneobject
+	    - IMDF_recall_confidance
+	
+	# 2021-03-19:
+	- Added scaling factors for the objects
+	
+	# 2021-04-09:
+	- Removed all files from the file pool and added them to the experimental folder
+	- Added trial lists for IMDF memory task. Same constraints are applied as to
+	TNT test in prescan session
+	__end__
+	set description "A simple notepad to document your experiment. This plug-in does nothing."
+
+define loop IMDF_click_loop_MC
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run IMDF_click_sequence_MC
+
+define loop IMDF_click_loop_confidence
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run IMDF_click_sequence_confidence
+
+define sequence IMDF_click_sequence_MC
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run IMDF_recall_sceneobject always
+	run IMDF_recall_sceneobject_mouse always
+	run IMDF_set_repeat_variable_MC always
+	run IMDF_repeat_cycle_MC always
+
+define sequence IMDF_click_sequence_confidence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run IMDF_recall_confidance always
+	run IMDF_recall_confidance_mouse always
+	run IMDF_set_repeat_variable_confidence always
+	run IMDF_repeat_cycle_confidence always
+
+define inline_script IMDF_object_positions
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	import random
+	list_of_positions = [(-200, -200), (200, -200), (0, 200)]
+	random.shuffle(list_of_positions)
+	
+	(var.x1, var.y1), (var.x2, var.y2), (var.x3, var.y3) = list_of_positions
+	__end__
+
+define inline_script IMDF_print_confidance
+	set description "Executes Python code"
+	___run__
+	print(var.cursor_roi)
+	
+	if var.cursor_roi=="low_roi":
+	    var.IMDF_confidance_rating=1
+	else:
+	    var.IMDF_confidance_rating=2
+	    
+	print(var.IMDF_confidance_rating)
+	__end__
+	set _prepare ""
+
+define inline_script IMDF_print_sceneobject
+	set description "Executes Python code"
+	___run__
+	print(var.cursor_roi)
+	
+	if "Target_object_ROI" in var.cursor_roi: 
+	    var.correct=1 
+	else: 
+	    var.correct=0
+	
+	print(var.correct)
+	__end__
+	set _prepare ""
+
+define loop IMDF_recall
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run IMDF_recall_blocksequence
+
+define loop IMDF_recall_blockloop
+	set source_file "block_loop_IMDF_postscan_PP_[subject_nr].csv"
+	set source file
+	set repeat 1
+	set order sequential
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run IMDF_recall_trailsequence
+
+define sequence IMDF_recall_blocksequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run new_pygaze_init always
+	run IMDF_recall_blockloop always
+
+define sketchpad IMDF_recall_confidance
+	set duration 0
+	set description "Displays stimuli"
+	draw line color=black penwidth=1 show_if=always x1=-256 x2=256 y1=0 y2=0 z_index=0
+	draw line color=black penwidth=1 show_if=always x1=-256 x2=-256 y1=0 y2=64 z_index=0
+	draw line color=black penwidth=1 show_if=always x1=256 x2=256 y1=0 y2=64 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="How confidant are you in your choice?" x=0 y=-32 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes name=lowroi show_if=always text=LOW x=-256 y=96 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes name=highroi show_if=always text=HIGH x=256 y=96 z_index=0
+
+define feedback IMDF_recall_confidance_feedback
+	set reset_variables yes
+	set duration 500
+	set description "Displays stimuli"
+	draw line color=black penwidth=1 show_if=always x1=-256 x2=256 y1=0 y2=0 z_index=0
+	draw line color=black penwidth=1 show_if=always x1=-256 x2=-256 y1=0 y2=64 z_index=0
+	draw line color=black penwidth=1 show_if=always x1=256 x2=256 y1=0 y2=64 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="How confidant are you in your choice?" x=0 y=-32 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes name=lowroi show_if=always text=LOW x=-256 y=96 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes name=highroi show_if=always text=HIGH x=256 y=96 z_index=0
+	draw rect color=green fill=0 h=64 penwidth=3 show_if="[cursor_roi]=lowroi" w=64 x=-288 y=64 z_index=0
+	draw rect color=green fill=0 h=64 penwidth=3 show_if="[cursor_roi]=highroi" w=64 x=224 y=64 z_index=0
+
+define mouse_response IMDF_recall_confidance_mouse
+	set timeout 4000
+	set show_cursor yes
+	set linked_sketchpad IMDF_recall_confidance
+	set flush yes
+	set event_type mouseclick
+	set duration mouseclick
+	set description "Collects mouse responses"
+
+define sketchpad IMDF_recall_fixcross
+	set duration 1000
+	set description "Displays stimuli"
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1="[start_x_fixationline]" x2="[end_x_fixationline]" y1=0 y2=0 z_index=0
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1=0 x2=0 y1="[start_y_fixationline]" y2="[end_y_fixationline]" z_index=0
+
+define sketchpad IMDF_recall_scene
+	set duration 2000
+	set description "Displays stimuli"
+	draw image center=1 file="[Scene]" scale="[scale_scene_recall]" show_if=always x=0 y=0 z_index=0
+
+define sketchpad IMDF_recall_sceneobject
+	set duration 0
+	set description "Displays stimuli"
+	draw image center=1 file="[Scene]" scale="[scale_scene_recall]" show_if=always x=0 y=0 z_index=0
+	draw image center=1 file="[Object]" name=Target_object_ROI scale="[scale_object_MC_IMDF]" show_if=always x="[x1]" y="[y1]" z_index=0
+	draw image center=1 file="[distractor_object_1]" name=Distractor_object1_ROI scale="[scale_object_MC_IMDF]" show_if=always x="[x2]" y="[y2]" z_index=0
+	draw image center=1 file="[distractor_object_2]" name=Distractor_object2_ROI scale="[scale_object_MC_IMDF]" show_if=always x="[x3]" y="[y3]" z_index=0
+
+define mouse_response IMDF_recall_sceneobject_mouse
+	set timeout 6000
+	set show_cursor yes
+	set linked_sketchpad IMDF_recall_sceneobject
+	set flush yes
+	set event_type mouseclick
+	set duration mouseclick
+	set description "Collects mouse responses"
+
+define sequence IMDF_recall_trailsequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run new_pygaze_start_recording always
+	run message_start_fixdot always
+	run IMDF_recall_fixcross always
+	run IMDF_recall_scene always
+	run IMDF_object_positions always
+	run IMDF_click_loop_MC always
+	run IMDF_print_sceneobject always
+	run IMDF_click_loop_confidence always
+	run IMDF_recall_confidance_feedback always
+	run IMDF_print_confidance always
+	run logger always
+	run new_pygaze_stop_recording always
+
+define repeat_cycle IMDF_repeat_cycle_MC
+	set description "Optionally repeat a cycle from a loop"
+	set condition "[repeat_variable] = yes"
+
+define repeat_cycle IMDF_repeat_cycle_confidence
+	set description "Optionally repeat a cycle from a loop"
+	set condition "[repeat_variable] = yes"
+
+define inline_script IMDF_set_repeat_variable_MC
+	set description "Executes Python code"
+	___run__
+	if "ROI" in var.cursor_roi:
+	    var.repeat_variable = "no"
+	else:
+	    var.repeat_variable = "yes"
+	    
+	print(var.cursor_roi)
+	print(var.repeat_variable)
+	__end__
+	set _prepare ""
+
+define inline_script IMDF_set_repeat_variable_confidence
+	set description "Executes Python code"
+	___run__
+	if "roi" in var.cursor_roi:
+	    var.repeat_variable = "no"
+	else:
+	    var.repeat_variable = "yes"
+	    
+	print(var.cursor_roi)
+	print(var.repeat_variable)
+	__end__
+	set _prepare ""
+
+define notepad Questions_CVS
+	set note "Translation confidence rating"
+	set description "A simple notepad to document your experiment. This plug-in does nothing."
+
+define inline_script SAM_ROI_locator
+	set description "Executes Python code"
+	___run__
+	print(var.cursor_roi)
+	# If a Mannekin is clicked ->
+	
+	if "SAM_" in var.cursor_roi:
+	    var.sam_clicked = "yes"
+	    # Determine x coordinate of the feedback box
+	    var.x_box_fb = var.get("x_box%s" % var.cursor_roi[-1:])
+	    
+	    if int(var.cursor_roi[-1:]) in (1,3,5,7,9):
+	        var.w_box = 128
+	        var.h_box = 128
+	    else:
+	        var.w_box = 70
+	        var.h_box = 70
+	        
+	    var.x_box_fb = var.x_box_fb - (var.w_box/2)
+	    var.y_box_fb = var.y_box - (var.h_box/2)
+	else:
+	    var.sam_clicked = "no"
+	print(var.sam_clicked)
+	__end__
+	set _prepare ""
+
+define loop SAM_click_evaluation1_loop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run SAM_click_evaluation1_sequence
+
+define sequence SAM_click_evaluation1_sequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run SAM_sceneresponse always
+	run SAM_sceneresponse_click always
+	run SAM_ROI_locator always
+	run SAM_sceneresponse_feedback "[sam_clicked] = yes"
+	run new_repeat_cycle always
+
+define loop SAM_evaluation1_loop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order sequential
+	set description "Repeatedly runs another item"
+	set cycles 2
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 evaluation valence
+	setcycle 0 SAM1_png "SAMval1_new.png"
+	setcycle 0 SAM2_png "SAMval2_new.png"
+	setcycle 0 SAM3_png "SAMval3_new.png"
+	setcycle 0 SAM4_png "SAMval4_new.png"
+	setcycle 0 SAM5_png "SAMval5_new.png"
+	setcycle 0 SAM6_png "SAMval6_new.png"
+	setcycle 0 SAM7_png "SAMval7_new.png"
+	setcycle 0 SAM8_png "SAMval8_new.png"
+	setcycle 0 SAM9_png "SAMval9_new.png"
+	setcycle 1 evaluation arousal
+	setcycle 1 SAM1_png "SAMarous1_new.png"
+	setcycle 1 SAM2_png "SAMarous2_new.png"
+	setcycle 1 SAM3_png "SAMarous3_new.png"
+	setcycle 1 SAM4_png "SAMarous4_new.png"
+	setcycle 1 SAM5_png "SAMarous5_new.png"
+	setcycle 1 SAM6_png "SAMarous6_new.png"
+	setcycle 1 SAM7_png "SAMarous7_new.png"
+	setcycle 1 SAM8_png "SAMarous8_new.png"
+	setcycle 1 SAM9_png "SAMarous9_new.png"
+	run SAM_evaluation1_sequence
+
+define sequence SAM_evaluation1_sequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run SAM_click_evaluation1_loop always
+
+define sketchpad SAM_sceneresponse
+	set duration 0
+	set description "Displays stimuli"
+	draw image center=1 file="[SAM1_png]" name="SAM_[evaluation]_1" scale=0.5 show_if=always x=-422 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM2_png]" name="SAM_[evaluation]_2" scale=0.27 show_if=always x=-317 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM3_png]" name="SAM_[evaluation]_3" scale=0.5 show_if=always x=-210 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM4_png]" name="SAM_[evaluation]_4" scale=0.27 show_if=always x=-104 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM5_png]" name="SAM_[evaluation]_5" scale=0.5 show_if=always x=2 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM6_png]" name="SAM_[evaluation]_6" scale=0.27 show_if=always x=106 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM7_png]" name="SAM_[evaluation]_7" scale=0.5 show_if=always x=211 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM8_png]" name="SAM_[evaluation]_8" scale=0.27 show_if=always x=317 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM9_png]" name="SAM_[evaluation]_9" scale=0.5 show_if=always x=423 y="[y_box]" z_index=0
+	draw image center=1 file="[Scene]" scale="[scale_scene_SAM_eval]" show_if=always x=0 y=-96 z_index=0
+
+define mouse_response SAM_sceneresponse_click
+	set timeout 10000
+	set show_cursor yes
+	set linked_sketchpad SAM_sceneresponse
+	set flush yes
+	set event_type mouseclick
+	set duration mouseclick
+	set description "Collects mouse responses"
+
+define feedback SAM_sceneresponse_feedback
+	set reset_variables yes
+	set duration 500
+	set description "Displays stimuli"
+	draw image center=1 file="[SAM1_png]" scale=0.5 show_if=always x=-422 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM2_png]" scale=0.27 show_if=always x=-317 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM3_png]" scale=0.5 show_if=always x=-210 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM4_png]" scale=0.27 show_if=always x=-104 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM5_png]" scale=0.5 show_if=always x=2 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM6_png]" scale=0.27 show_if=always x=106 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM7_png]" scale=0.5 show_if=always x=211 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM8_png]" scale=0.27 show_if=always x=317 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM9_png]" scale=0.5 show_if=always x=423 y="[y_box]" z_index=0
+	draw image center=1 file="[Scene]" scale="[scale_scene_SAM_eval]" show_if=always x=0 y=-96 z_index=0
+	draw rect color=green fill=0 h="[h_box]" penwidth=5 show_if=always w="[w_box]" x="[x_box_fb]" y="[y_box_fb]" z_index=0
+
+define inline_script TNT_eval_definejitter
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	import random
+	
+	eval_jitter=\
+	[6.39171807542852,	6.42007922042601,	5.74269868554247,	6.43631779350943,	5.38837907112557,	5.24934254237472,	5.22545940504948,	6.26163248945607,	5.43654242434608,	5.83635576113238,	5.23552365846727,	5.42769938360315,	5.20419056326370,	6.08156304409640,	5.91514381638381,	5.23873420299813,	5.99913487948157,	5.83816762447648,	6.07557536042691,	5.71629698047711,	5.00602180051111,	5.46280060077384,	5.48063111639319,	6.15527999439610,	5.40150366541231,	5.99567348910165,	6.18177988666288,	5.33735615860494,	5.81225308585899,	5.70342946843528,	5.61740972665818,	6.34690869799567,	6.20552592213605,	5.32885152681883,	5.65869783071752,	5.37753725940345,	6.23269386658755,	5.24599711435785,	5.72735490782172,	5.02812160413060,	5.28189398749418,	5.11898704442216,	5.53033180360377,	5.58033722580508,	5.72028341582739,	5.07487538262358,	6.33160230903129,	5.99814352491048,	6.09485974809961,	5.49902076573978,	5.27950001106703,	5.53076833955239,	6.22659021997917,	5.11332945662693,	5.45546850096803,	6.02091429710000,	5.89856566154682,	5.51170365159440,	6.06428045591876,	6.04921714908436,	5.42210158200436,	6.12133586108330,	6.22437373913077,	5.42970656728486,	5.56131192252940,	5.01964857903188,	5.00307971141946,	6.11974956031803,	6.16237037235628,	6.49253853141139,	5.76304978808731,	5.73670581497541,	5.75328196927637,	5.80091225972563,	5.23802656170435,	6.11835041180428,	5.46347916671168,	6.03279701122120,	5.11372703547266,	6.18617857349013,	5.73606317360789,	5.60684184550429,	5.73752343773703,	5.17715020472199]
+	print(len(eval_jitter))
+	
+	random.shuffle(eval_jitter) 
+	__end__
+
+define sketchpad TNT_eval_fixcross
+	set duration "[evaljitter]"
+	set description "Displays stimuli"
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1="[start_x_fixationline]" x2="[end_x_fixationline]" y1=0 y2=0 z_index=0
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1=0 x2=0 y1="[start_y_fixationline]" y2="[end_y_fixationline]" z_index=0
+
+define inline_script TNT_eval_getjitter
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	var.evaljitter=eval_jitter.pop()*1000 
+	print(var.evaljitter)
+	__end__
+
+define sketchpad TNT_evaluation1_end
+	set start_response_interval no
+	set duration keypress
+	set description "A sketchpad notifying the participant that the experiment is finished"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=4 y=-5 z_index=0
+
+define loop TNT_evaluation1_lab_blockloop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order sequential
+	set description "Repeatedly runs another item"
+	set cycles 84
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Emotion "neg-filler"
+	setcycle 0 Scene "Animals_047_hdisgust.jpg"
+	setcycle 0 Object "sunglasses01.jpg"
+	setcycle 1 Emotion "neu-filler"
+	setcycle 1 Scene "neutral_053.jpg"
+	setcycle 1 Object "pingpongracket.jpg"
+	setcycle 2 Emotion neg
+	setcycle 2 Scene "Animals_007_h_disgustfear.jpg"
+	setcycle 2 Object "comb02a.jpg"
+	setcycle 3 Emotion neu
+	setcycle 3 Scene "neutral_222.jpg"
+	setcycle 3 Object "feather03a.jpg"
+	setcycle 4 Emotion neg
+	setcycle 4 Scene "Objects_328_hdisgust.jpg"
+	setcycle 4 Object "boot02b.jpg"
+	setcycle 5 Emotion neu
+	setcycle 5 Scene "neutral_227.jpg"
+	setcycle 5 Object "chessboard.jpg"
+	setcycle 6 Emotion neu
+	setcycle 6 Scene "neutral_022.jpg"
+	setcycle 6 Object "pencilsharpener02a.jpg"
+	setcycle 7 Emotion neg
+	setcycle 7 Scene "2900.1_people_crying.jpg"
+	setcycle 7 Object "box01.jpg"
+	setcycle 8 Emotion neg
+	setcycle 8 Scene "9050_people_accident.jpg"
+	setcycle 8 Object "dice05a.jpg"
+	setcycle 9 Emotion neg
+	setcycle 9 Scene "Faces_363_vsad.jpg"
+	setcycle 9 Object "measuringtape01.jpg"
+	setcycle 10 Emotion neu
+	setcycle 10 Scene "neutral_580.jpg"
+	setcycle 10 Object "candle08b.jpg"
+	setcycle 11 Emotion neg
+	setcycle 11 Scene "1304._animal_fear.jpg"
+	setcycle 11 Object "crayon.jpg"
+	setcycle 12 Emotion neu
+	setcycle 12 Scene "neutral_195.jpg"
+	setcycle 12 Object "cup01.jpg"
+	setcycle 13 Emotion neu
+	setcycle 13 Scene "neutral_017.jpg"
+	setcycle 13 Object "hat03b.jpg"
+	setcycle 14 Emotion neg
+	setcycle 14 Scene "Objects_006_hdisgust.jpg"
+	setcycle 14 Object "towel02a.jpg"
+	setcycle 15 Emotion neu
+	setcycle 15 Scene "neutral_100.jpg"
+	setcycle 15 Object "drum.jpg"
+	setcycle 16 Emotion neg
+	setcycle 16 Scene "9412_people_sad.jpg"
+	setcycle 16 Object "book01b.jpg"
+	setcycle 17 Emotion neu
+	setcycle 17 Scene "neutral_144.jpg"
+	setcycle 17 Object "chair.jpg"
+	setcycle 18 Emotion "neu-filler"
+	setcycle 18 Scene "neutral_066.jpg"
+	setcycle 18 Object "fryingpan02a.jpg"
+	setcycle 19 Emotion neu
+	setcycle 19 Scene "neutral_246.jpg"
+	setcycle 19 Object "stackingrings01a.jpg"
+	setcycle 20 Emotion neg
+	setcycle 20 Scene "People_033_hsad.jpg"
+	setcycle 20 Object "cane.jpg"
+	setcycle 21 Emotion neu
+	setcycle 21 Scene "neutral_007.jpg"
+	setcycle 21 Object "shirt01.jpg"
+	setcycle 22 Emotion neg
+	setcycle 22 Scene "6550_people_fear.jpg"
+	setcycle 22 Object "plasticflower01a.jpg"
+	setcycle 23 Emotion "neg-filler"
+	setcycle 23 Scene "Animals_087_h.jpg"
+	setcycle 23 Object " scale01a.jpg"
+	setcycle 24 Emotion neu
+	setcycle 24 Scene "neutral_098.jpg"
+	setcycle 24 Object "tuque03b.jpg"
+	setcycle 25 Emotion neg
+	setcycle 25 Scene "Animals_041_hfeardisgust.jpg"
+	setcycle 25 Object "hourglass.jpg"
+	setcycle 26 Emotion neg
+	setcycle 26 Scene "People_140_hsad.jpg"
+	setcycle 26 Object "wallet04.jpg"
+	setcycle 27 Emotion neu
+	setcycle 27 Scene "neutral_058.jpg"
+	setcycle 27 Object "handfan01b.jpg"
+	setcycle 28 Emotion neu
+	setcycle 28 Scene "neutral_128.jpg"
+	setcycle 28 Object "bow04.jpg"
+	setcycle 29 Emotion neg
+	setcycle 29 Scene "9414_people_fighting.jpg"
+	setcycle 29 Object "teabag.jpg"
+	setcycle 30 Emotion neu
+	setcycle 30 Scene "neutral_192.jpg"
+	setcycle 30 Object "negativefilm.jpg"
+	setcycle 31 Emotion neu
+	setcycle 31 Scene "neutral_024.jpg"
+	setcycle 31 Object "clothespin03b.jpg"
+	setcycle 32 Emotion neg
+	setcycle 32 Scene "People_127_fearh.jpg"
+	setcycle 32 Object "makeupbrush04.jpg"
+	setcycle 33 Emotion "neg-filler"
+	setcycle 33 Scene "Objects_283_hsad.jpg"
+	setcycle 33 Object " microscope.jpg"
+	setcycle 34 Emotion neg
+	setcycle 34 Scene "9440_object_disgustandfear.jpg"
+	setcycle 34 Object "glassmop.jpg"
+	setcycle 35 Emotion neg
+	setcycle 35 Scene "2700._people_crying_sad.jpg"
+	setcycle 35 Object "pillow02b.jpg"
+	setcycle 36 Emotion "neu-filler"
+	setcycle 36 Scene "neutral_716.jpg"
+	setcycle 36 Object "waterbottle03.jpg"
+	setcycle 37 Emotion neg
+	setcycle 37 Scene "People_201_vsadterror.jpg"
+	setcycle 37 Object "globe.jpg"
+	setcycle 38 Emotion neu
+	setcycle 38 Scene "neutral_374.jpg"
+	setcycle 38 Object "rubberglove02b.jpg"
+	setcycle 39 Emotion neg
+	setcycle 39 Scene "9290_object_disgsut.jpg"
+	setcycle 39 Object "clipboard.jpg"
+	setcycle 40 Emotion neu
+	setcycle 40 Scene "neutral_065.jpg"
+	setcycle 40 Object "pylon.jpg"
+	setcycle 41 Emotion neu
+	setcycle 41 Scene "neutral_390.jpg"
+	setcycle 41 Object "toothbrush03b.jpg"
+	setcycle 42 Emotion neu
+	setcycle 42 Scene "neutral_509.jpg"
+	setcycle 42 Object "battery02b.jpg"
+	setcycle 43 Emotion neg
+	setcycle 43 Scene "People_225_hdisgustsad.jpg"
+	setcycle 43 Object "envelope03a.jpg"
+	setcycle 44 Emotion neu
+	setcycle 44 Scene "neutral_226.jpg"
+	setcycle 44 Object "ring01.jpg"
+	setcycle 45 Emotion neu
+	setcycle 45 Scene "neutral_050.jpg"
+	setcycle 45 Object "medal02b.jpg"
+	setcycle 46 Emotion neg
+	setcycle 46 Scene "8480_people_fear.jpg"
+	setcycle 46 Object "safetypin.jpg"
+	setcycle 47 Emotion "neg-filler"
+	setcycle 47 Scene "Animals_020_h_fear.jpg"
+	setcycle 47 Object "lightbulb01.jpg"
+	setcycle 48 Emotion neg
+	setcycle 48 Scene "1201_animal_fearanddisgust.jpg"
+	setcycle 48 Object "ruler05.jpg"
+	setcycle 49 Emotion neu
+	setcycle 49 Scene "neutral_659.jpg"
+	setcycle 49 Object "lock03a.jpg"
+	setcycle 50 Emotion neg
+	setcycle 50 Scene "Objects_021_vdisgust.jpg"
+	setcycle 50 Object "thimble.jpg"
+	setcycle 51 Emotion neu
+	setcycle 51 Scene "neutral_107.jpg"
+	setcycle 51 Object "baseball01a.jpg"
+	setcycle 52 Emotion "neu-filler"
+	setcycle 52 Scene "neutral_421.jpg"
+	setcycle 52 Object "paintroller01.jpg"
+	setcycle 53 Emotion neg
+	setcycle 53 Scene "9421_people_sad.jpg"
+	setcycle 53 Object "protractor.jpg"
+	setcycle 54 Emotion neu
+	setcycle 54 Scene "neutral_614.jpg"
+	setcycle 54 Object "birdie.jpg"
+	setcycle 55 Emotion neg
+	setcycle 55 Scene "People_077_vfear.jpg"
+	setcycle 55 Object "hanger02a.jpg"
+	setcycle 56 Emotion neu
+	setcycle 56 Scene "neutral_247.jpg"
+	setcycle 56 Object "lifejacket.jpg"
+	setcycle 57 Emotion neg
+	setcycle 57 Scene "2703_people_cryingsad.jpg"
+	setcycle 57 Object "bag.jpg"
+	setcycle 58 Emotion neu
+	setcycle 58 Scene "neutral_706.jpg"
+	setcycle 58 Object "fan.jpg"
+	setcycle 59 Emotion neu
+	setcycle 59 Scene "neutral_064.jpg"
+	setcycle 59 Object "tape02a.jpg"
+	setcycle 60 Emotion neg
+	setcycle 60 Scene "Animals_221_hdisgustfear.jpg"
+	setcycle 60 Object "binoculars01b.jpg"
+	setcycle 61 Emotion "neu-filler"
+	setcycle 61 Scene "neutral_197.jpg"
+	setcycle 61 Object "match.jpg"
+	setcycle 62 Emotion neg
+	setcycle 62 Scene "Animals_008_v_disgust.jpg"
+	setcycle 62 Object "spoon01.jpg"
+	setcycle 63 Emotion neg
+	setcycle 63 Scene "2981_animal_disgust.jpg"
+	setcycle 63 Object "mirror.jpg"
+	setcycle 64 Emotion "neg-filler"
+	setcycle 64 Scene "Objects_106_vdisgust.jpg"
+	setcycle 64 Object "brick.jpg"
+	setcycle 65 Emotion neg
+	setcycle 65 Scene "1033_animal_fearanddisgust.jpg"
+	setcycle 65 Object "key01.jpg"
+	setcycle 66 Emotion neu
+	setcycle 66 Scene "neutral_409.jpg"
+	setcycle 66 Object "violin.jpg"
+	setcycle 67 Emotion neg
+	setcycle 67 Scene "9940_object_fear.jpg"
+	setcycle 67 Object "branch02.jpg"
+	setcycle 68 Emotion neu
+	setcycle 68 Scene "neutral_582.jpg"
+	setcycle 68 Object "hinge.jpg"
+	setcycle 69 Emotion neu
+	setcycle 69 Scene "neutral_331.jpg"
+	setcycle 69 Object "radio02.jpg"
+	setcycle 70 Emotion neu
+	setcycle 70 Scene "neutral_293.jpg"
+	setcycle 70 Object "belt02a.jpg"
+	setcycle 71 Emotion neg
+	setcycle 71 Scene "Faces_368_hsaddisgust.jpg"
+	setcycle 71 Object "seashell.jpg"
+	setcycle 72 Emotion neg
+	setcycle 72 Scene "2811_object_fear.jpg"
+	setcycle 72 Object "measuringcup01.jpg"
+	setcycle 73 Emotion neu
+	setcycle 73 Scene "neutral_310.jpg"
+	setcycle 73 Object "playingcard04.jpg"
+	setcycle 74 Emotion neg
+	setcycle 74 Scene "6520_people_fear.jpg"
+	setcycle 74 Object "calculator01.jpg"
+	setcycle 75 Emotion neu
+	setcycle 75 Scene "neutral_380.jpg"
+	setcycle 75 Object "watch02a.jpg"
+	setcycle 76 Emotion neg
+	setcycle 76 Scene "People_001_hsadterror.jpg"
+	setcycle 76 Object "stapler03a.jpg"
+	setcycle 77 Emotion neu
+	setcycle 77 Scene "neutral_550.jpg"
+	setcycle 77 Object "magnifyingglass01b.jpg"
+	setcycle 78 Emotion neg
+	setcycle 78 Scene "9433_people-disgust.jpg"
+	setcycle 78 Object "pictureframe04.jpg"
+	setcycle 79 Emotion neu
+	setcycle 79 Scene "neutral_512.jpg"
+	setcycle 79 Object "binder03b.jpg"
+	setcycle 80 Emotion neu
+	setcycle 80 Scene "neutral_134.jpg"
+	setcycle 80 Object "bottlecap.jpg"
+	setcycle 81 Emotion neg
+	setcycle 81 Scene "9183_animal_disgustandsad.jpg"
+	setcycle 81 Object "flashlight02b.jpg"
+	setcycle 82 Emotion "neg-filler"
+	setcycle 82 Scene "People_121_hsad.jpg"
+	setcycle 82 Object "CD.jpg"
+	setcycle 83 Emotion "neu-filler"
+	setcycle 83 Scene "neutral_169.jpg"
+	setcycle 83 Object "button01.jpg"
+	run TNT_evaluation1_lab_trialsequence
+
+define sequence TNT_evaluation1_lab_blocksequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run TNT_eval_definejitter always
+	run TNT_evaluation1_lab_blockloop always
+
+define sequence TNT_evaluation1_lab_trialsequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run scene always
+	run SAM_evaluation1_loop always
+	run TNT_eval_getjitter always
+	run TNT_eval_fixcross always
+	run logger always
+
+define loop TNT_evaluation1_postlab
+	set source_file ""
+	set source table
+	set skip 0
+	set repeat 1
+	set order random
+	set offset no
+	set item block_sequence
+	set description "A loop containing one or more experimental blocks"
+	set cycles 2
+	set continuous no
+	set column_order practice
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	setcycle 1 empty_column ""
+	run TNT_evaluation1_lab_blocksequence
+
+define sketchpad TNT_recall
+	set duration 5000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Please describe the image uniquely in 1 sentence (15 sec)" x=0 y=0 z_index=0
+
+define loop TNT_recall_1
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run TNT_recall_blocksequence
+
+define loop TNT_recall_blockloop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 84
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Emotion "neg-filler"
+	setcycle 0 Scene "Animals_047_hdisgust.jpg"
+	setcycle 0 Object "sunglasses01.jpg"
+	setcycle 1 Emotion "neu-filler"
+	setcycle 1 Scene "neutral_053.jpg"
+	setcycle 1 Object "pingpongracket.jpg"
+	setcycle 2 Emotion neg
+	setcycle 2 Scene "Animals_007_h_disgustfear.jpg"
+	setcycle 2 Object "comb02a.jpg"
+	setcycle 3 Emotion neu
+	setcycle 3 Scene "neutral_222.jpg"
+	setcycle 3 Object "feather03a.jpg"
+	setcycle 4 Emotion neg
+	setcycle 4 Scene "Objects_328_hdisgust.jpg"
+	setcycle 4 Object "boot02b.jpg"
+	setcycle 5 Emotion neu
+	setcycle 5 Scene "neutral_227.jpg"
+	setcycle 5 Object "chessboard.jpg"
+	setcycle 6 Emotion neu
+	setcycle 6 Scene "neutral_022.jpg"
+	setcycle 6 Object "pencilsharpener02a.jpg"
+	setcycle 7 Emotion neg
+	setcycle 7 Scene "2900.1_people_crying.jpg"
+	setcycle 7 Object "box01.jpg"
+	setcycle 8 Emotion neg
+	setcycle 8 Scene "9050_people_accident.jpg"
+	setcycle 8 Object "dice05a.jpg"
+	setcycle 9 Emotion neg
+	setcycle 9 Scene "Faces_363_vsad.jpg"
+	setcycle 9 Object "measuringtape01.jpg"
+	setcycle 10 Emotion neu
+	setcycle 10 Scene "neutral_580.jpg"
+	setcycle 10 Object "candle08b.jpg"
+	setcycle 11 Emotion neg
+	setcycle 11 Scene "1304._animal_fear.jpg"
+	setcycle 11 Object "crayon.jpg"
+	setcycle 12 Emotion neu
+	setcycle 12 Scene "neutral_195.jpg"
+	setcycle 12 Object "cup01.jpg"
+	setcycle 13 Emotion neu
+	setcycle 13 Scene "neutral_017.jpg"
+	setcycle 13 Object "hat03b.jpg"
+	setcycle 14 Emotion neg
+	setcycle 14 Scene "Objects_006_hdisgust.jpg"
+	setcycle 14 Object "towel02a.jpg"
+	setcycle 15 Emotion neu
+	setcycle 15 Scene "neutral_100.jpg"
+	setcycle 15 Object "drum.jpg"
+	setcycle 16 Emotion neg
+	setcycle 16 Scene "9412_people_sad.jpg"
+	setcycle 16 Object "book01b.jpg"
+	setcycle 17 Emotion neu
+	setcycle 17 Scene "neutral_144.jpg"
+	setcycle 17 Object "chair.jpg"
+	setcycle 18 Emotion "neu-filler"
+	setcycle 18 Scene "neutral_066.jpg"
+	setcycle 18 Object "fryingpan02a.jpg"
+	setcycle 19 Emotion neu
+	setcycle 19 Scene "neutral_246.jpg"
+	setcycle 19 Object "stackingrings01a.jpg"
+	setcycle 20 Emotion neg
+	setcycle 20 Scene "People_033_hsad.jpg"
+	setcycle 20 Object "cane.jpg"
+	setcycle 21 Emotion neu
+	setcycle 21 Scene "neutral_007.jpg"
+	setcycle 21 Object "shirt01.jpg"
+	setcycle 22 Emotion neg
+	setcycle 22 Scene "6550_people_fear.jpg"
+	setcycle 22 Object "plasticflower01a.jpg"
+	setcycle 23 Emotion "neg-filler"
+	setcycle 23 Scene "Animals_087_h.jpg"
+	setcycle 23 Object " scale01a.jpg"
+	setcycle 24 Emotion neu
+	setcycle 24 Scene "neutral_098.jpg"
+	setcycle 24 Object "tuque03b.jpg"
+	setcycle 25 Emotion neg
+	setcycle 25 Scene "Animals_041_hfeardisgust.jpg"
+	setcycle 25 Object "hourglass.jpg"
+	setcycle 26 Emotion neg
+	setcycle 26 Scene "People_140_hsad.jpg"
+	setcycle 26 Object "wallet04.jpg"
+	setcycle 27 Emotion neu
+	setcycle 27 Scene "neutral_058.jpg"
+	setcycle 27 Object "handfan01b.jpg"
+	setcycle 28 Emotion neu
+	setcycle 28 Scene "neutral_128.jpg"
+	setcycle 28 Object "bow04.jpg"
+	setcycle 29 Emotion neg
+	setcycle 29 Scene "9414_people_fighting.jpg"
+	setcycle 29 Object "teabag.jpg"
+	setcycle 30 Emotion neu
+	setcycle 30 Scene "neutral_192.jpg"
+	setcycle 30 Object "negativefilm.jpg"
+	setcycle 31 Emotion neu
+	setcycle 31 Scene "neutral_024.jpg"
+	setcycle 31 Object "clothespin03b.jpg"
+	setcycle 32 Emotion neg
+	setcycle 32 Scene "People_127_fearh.jpg"
+	setcycle 32 Object "makeupbrush04.jpg"
+	setcycle 33 Emotion "neg-filler"
+	setcycle 33 Scene "Objects_283_hsad.jpg"
+	setcycle 33 Object " microscope.jpg"
+	setcycle 34 Emotion neg
+	setcycle 34 Scene "9440_object_disgustandfear.jpg"
+	setcycle 34 Object "glassmop.jpg"
+	setcycle 35 Emotion neg
+	setcycle 35 Scene "2700._people_crying_sad.jpg"
+	setcycle 35 Object "pillow02b.jpg"
+	setcycle 36 Emotion "neu-filler"
+	setcycle 36 Scene "neutral_716.jpg"
+	setcycle 36 Object "waterbottle03.jpg"
+	setcycle 37 Emotion neg
+	setcycle 37 Scene "People_201_vsadterror.jpg"
+	setcycle 37 Object "globe.jpg"
+	setcycle 38 Emotion neu
+	setcycle 38 Scene "neutral_374.jpg"
+	setcycle 38 Object "rubberglove02b.jpg"
+	setcycle 39 Emotion neg
+	setcycle 39 Scene "9290_object_disgsut.jpg"
+	setcycle 39 Object "clipboard.jpg"
+	setcycle 40 Emotion neu
+	setcycle 40 Scene "neutral_065.jpg"
+	setcycle 40 Object "pylon.jpg"
+	setcycle 41 Emotion neu
+	setcycle 41 Scene "neutral_390.jpg"
+	setcycle 41 Object "toothbrush03b.jpg"
+	setcycle 42 Emotion neu
+	setcycle 42 Scene "neutral_509.jpg"
+	setcycle 42 Object "battery02b.jpg"
+	setcycle 43 Emotion neg
+	setcycle 43 Scene "People_225_hdisgustsad.jpg"
+	setcycle 43 Object "envelope03a.jpg"
+	setcycle 44 Emotion neu
+	setcycle 44 Scene "neutral_226.jpg"
+	setcycle 44 Object "ring01.jpg"
+	setcycle 45 Emotion neu
+	setcycle 45 Scene "neutral_050.jpg"
+	setcycle 45 Object "medal02b.jpg"
+	setcycle 46 Emotion neg
+	setcycle 46 Scene "8480_people_fear.jpg"
+	setcycle 46 Object "safetypin.jpg"
+	setcycle 47 Emotion "neg-filler"
+	setcycle 47 Scene "Animals_020_h_fear.jpg"
+	setcycle 47 Object "lightbulb01.jpg"
+	setcycle 48 Emotion neg
+	setcycle 48 Scene "1201_animal_fearanddisgust.jpg"
+	setcycle 48 Object "ruler05.jpg"
+	setcycle 49 Emotion neu
+	setcycle 49 Scene "neutral_659.jpg"
+	setcycle 49 Object "lock03a.jpg"
+	setcycle 50 Emotion neg
+	setcycle 50 Scene "Objects_021_vdisgust.jpg"
+	setcycle 50 Object "thimble.jpg"
+	setcycle 51 Emotion neu
+	setcycle 51 Scene "neutral_107.jpg"
+	setcycle 51 Object "baseball01a.jpg"
+	setcycle 52 Emotion "neu-filler"
+	setcycle 52 Scene "neutral_421.jpg"
+	setcycle 52 Object "paintroller01.jpg"
+	setcycle 53 Emotion neg
+	setcycle 53 Scene "9421_people_sad.jpg"
+	setcycle 53 Object "protractor.jpg"
+	setcycle 54 Emotion neu
+	setcycle 54 Scene "neutral_614.jpg"
+	setcycle 54 Object "birdie.jpg"
+	setcycle 55 Emotion neg
+	setcycle 55 Scene "People_077_vfear.jpg"
+	setcycle 55 Object "hanger02a.jpg"
+	setcycle 56 Emotion neu
+	setcycle 56 Scene "neutral_247.jpg"
+	setcycle 56 Object "lifejacket.jpg"
+	setcycle 57 Emotion neg
+	setcycle 57 Scene "2703_people_cryingsad.jpg"
+	setcycle 57 Object "bag.jpg"
+	setcycle 58 Emotion neu
+	setcycle 58 Scene "neutral_706.jpg"
+	setcycle 58 Object "fan.jpg"
+	setcycle 59 Emotion neu
+	setcycle 59 Scene "neutral_064.jpg"
+	setcycle 59 Object "tape02a.jpg"
+	setcycle 60 Emotion neg
+	setcycle 60 Scene "Animals_221_hdisgustfear.jpg"
+	setcycle 60 Object "binoculars01b.jpg"
+	setcycle 61 Emotion "neu-filler"
+	setcycle 61 Scene "neutral_197.jpg"
+	setcycle 61 Object "match.jpg"
+	setcycle 62 Emotion neg
+	setcycle 62 Scene "Animals_008_v_disgust.jpg"
+	setcycle 62 Object "spoon01.jpg"
+	setcycle 63 Emotion neg
+	setcycle 63 Scene "2981_animal_disgust.jpg"
+	setcycle 63 Object "mirror.jpg"
+	setcycle 64 Emotion "neg-filler"
+	setcycle 64 Scene "Objects_106_vdisgust.jpg"
+	setcycle 64 Object "brick.jpg"
+	setcycle 65 Emotion neg
+	setcycle 65 Scene "1033_animal_fearanddisgust.jpg"
+	setcycle 65 Object "key01.jpg"
+	setcycle 66 Emotion neu
+	setcycle 66 Scene "neutral_409.jpg"
+	setcycle 66 Object "violin.jpg"
+	setcycle 67 Emotion neg
+	setcycle 67 Scene "9940_object_fear.jpg"
+	setcycle 67 Object "branch02.jpg"
+	setcycle 68 Emotion neu
+	setcycle 68 Scene "neutral_582.jpg"
+	setcycle 68 Object "hinge.jpg"
+	setcycle 69 Emotion neu
+	setcycle 69 Scene "neutral_331.jpg"
+	setcycle 69 Object "radio02.jpg"
+	setcycle 70 Emotion neu
+	setcycle 70 Scene "neutral_293.jpg"
+	setcycle 70 Object "belt02a.jpg"
+	setcycle 71 Emotion neg
+	setcycle 71 Scene "Faces_368_hsaddisgust.jpg"
+	setcycle 71 Object "seashell.jpg"
+	setcycle 72 Emotion neg
+	setcycle 72 Scene "2811_object_fear.jpg"
+	setcycle 72 Object "measuringcup01.jpg"
+	setcycle 73 Emotion neu
+	setcycle 73 Scene "neutral_310.jpg"
+	setcycle 73 Object "playingcard04.jpg"
+	setcycle 74 Emotion neg
+	setcycle 74 Scene "6520_people_fear.jpg"
+	setcycle 74 Object "calculator01.jpg"
+	setcycle 75 Emotion neu
+	setcycle 75 Scene "neutral_380.jpg"
+	setcycle 75 Object "watch02a.jpg"
+	setcycle 76 Emotion neg
+	setcycle 76 Scene "People_001_hsadterror.jpg"
+	setcycle 76 Object "stapler03a.jpg"
+	setcycle 77 Emotion neu
+	setcycle 77 Scene "neutral_550.jpg"
+	setcycle 77 Object "magnifyingglass01b.jpg"
+	setcycle 78 Emotion neg
+	setcycle 78 Scene "9433_people-disgust.jpg"
+	setcycle 78 Object "pictureframe04.jpg"
+	setcycle 79 Emotion neu
+	setcycle 79 Scene "neutral_512.jpg"
+	setcycle 79 Object "binder03b.jpg"
+	setcycle 80 Emotion neu
+	setcycle 80 Scene "neutral_134.jpg"
+	setcycle 80 Object "bottlecap.jpg"
+	setcycle 81 Emotion neg
+	setcycle 81 Scene "9183_animal_disgustandsad.jpg"
+	setcycle 81 Object "flashlight02b.jpg"
+	setcycle 82 Emotion "neg-filler"
+	setcycle 82 Scene "People_121_hsad.jpg"
+	setcycle 82 Object "CD.jpg"
+	setcycle 83 Emotion "neu-filler"
+	setcycle 83 Scene "neutral_169.jpg"
+	setcycle 83 Object "button01.jpg"
+	run TNT_recall_trialsequence
+
+define sequence TNT_recall_blocksequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run TNT_recall_blockloop always
+
+define sketchpad TNT_recall_fixcross
+	set duration 3000
+	set description "Displays stimuli"
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1="[start_x_fixationline]" x2="[end_x_fixationline]" y1=0 y2=0 z_index=0
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1=0 x2=0 y1="[start_y_fixationline]" y2="[end_y_fixationline]" z_index=0
+
+define sketchpad TNT_recall_object
+	set duration 0
+	set description "Displays stimuli"
+	draw image center=1 file="[Object]" scale="[scale_object_recall]" show_if=always x=0 y=0 z_index=0
+
+define keyboard_response TNT_recall_response
+	set timeout infinite
+	set flush yes
+	set event_type keypress
+	set duration keypress
+	set description "Collects keyboard responses"
+	set allowed_responses "w;x"
+
+define sketchpad TNT_recall_timer1
+	set duration 5000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="10 seconds remaining." x=0 y=0 z_index=0
+
+define sketchpad TNT_recall_timer2
+	set duration 5000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="5 seconds remaining." x=0 y=0 z_index=0
+
+define sequence TNT_recall_trialsequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run TNT_recall_fixcross always
+	run TNT_recall_object always
+	run TNT_recall_response always
+	run TNT_recall "[response] = w"
+	run TNT_recall_wait "[response] = x"
+	run TNT_recall_timer1 always
+	run TNT_recall_timer2 always
+	run logger always
+
+define sketchpad TNT_recall_wait
+	set duration 5000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="" x=0 y=0 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Please wait for 15 sec." x=0 y=0 z_index=0
+
+define notepad Todo
+	__note__
+	DONE:
+	
+	**Counterbalancing stimuli in blockloop or before? depends on cam./CVS
+	
+	**How to calibrate screen dimensions btw computers in the lab and at the fMRI? - wait until OS is 
+	installed and running on each comp./CVS
+	
+	**Show blank slide instead of second fixcross? - discuss Cam. /CVS
+	
+	**SAM feedback slide with blue square around SAM and feedback that they should click SAM.- next time
+	
+	**Add in TNT_evalutaion_END that pts should press SPACE to begin actual eval when ready./CVS
+	
+	**How to update image size for each trial within blockloop column? - will probably just use one SAM sacle per sketchpad
+	
+	**Implement a SAM slider.
+	
+	**Implement SAM boxes and write inline script to force pts to click in square i.e. not grey area - name all the boxes!/CVS
+	
+	**Dont forget to name manikins if using indiv SAM pics /CVS
+	
+	**Implement inter-trial intrusion rating with button press or verbal feedback for fmri part
+	
+	**Fill in loop content when I get new folder from Cam /CVS
+	
+	**Consider using external excel file for stimuli i.e. loop content via "source" /CVS
+	
+	**look at output and figure out how to change delimeter in excel
+	
+	**How to determine correct response on multiplechoice question? 
+	
+	**How to make multiple choice scene locations random?
+	
+	**uniform scaling of images either in OS or in Py (better for timing)
+	
+	**SAM manikin 3 too small - scaling should be aroun .45 but only for valence - arousal should probably still be at .5
+	
+	***Can read in trial list for each pts from matlab?
+	
+	**screen to screen scaling 
+	
+	**Randomsization of 2 foils for forced choice recognition in test-feedback phase
+	
+	**how to get 80% (testfeedback) and 70% (criterion test) for each condition indiv.?
+	
+	**How to programm for max 2 cycles in testfeedback and max 3 cycles in criterion test?
+	
+	**remeber to change fixationdots to fixationcross for all trials using it and just copy paste the proper code into the sketchpad script (duration might differ /CVS
+	
+	Todo 27.01.2021
+	
+	**Eval jitter from Subbu?
+	
+	Resize raw scenes via python code for DF (TNT good?)
+	
+	**Edit MRI T pulse element re note from Robert (in Drafts)
+	
+	**Testfeedback and criterion 2 foils match valence - check Subbu's notes /CVS
+	
+	**Is the scanner sending a pluse every 2 s i.e. TR?
+	
+	Subtract 5 ms for critical timing??
+	
+	make global linked end message for all trials /CVS
+	
+	Add all instructions (edit first one) & rename instruct sketchpads /CVS
+	
+	For the threshold of 80% correct (test feedback) and 70% (criterion test) -> 
+	    should the filler trials be included in this calculation?
+	    - for now they are included
+	    *ask in Cambridge!! /CVS
+	
+	input pygaze logger for every event of interest /CVS
+	    
+	LOTJE:
+	- Testfeedback loop/ criterion loop should not be entirely random. 
+	    - First and last 2 items should be fillers
+	    - No more than 3 trials from the same condition in a row
+	
+	**Implement pyschopy.iohub for eye-tracker
+	
+	**recontact integrative minds re eyetracker psycho.iohub script example /CVS
+	
+	**figure out parallel port address and trigger value for physio /CVS
+	__end__
+	set description "Some pointers to help you gest started!"
+
+define sequence experiment
+	set flush_keyboard yes
+	set description "The main sequence of the experiment"
+	run Todo always
+	run Questions_CVS always
+	run CHANGELOG always
+	run postlab_todos always
+	run welcome never
+	run instruct_1 never
+	run instruct_2 never
+	run get_ready never
+	run waiting_for_triggerpulse never
+	run fixation never
+	run set_coordinates_feedback_box never
+	run set_scaling_factors always
+	run TNT_recall_1 never
+	run IMDF_recall always
+	run TNT_evaluation1_postlab always
+	run TNT_evaluation1_end always
+
+define inline_script fixation
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	var.fixationdimension = 60
+	var.fixationwidth = 4
+	
+	var.start_x_fixationline = -(var.fixationdimension/2)
+	var.end_x_fixationline = (var.fixationdimension/2)
+	
+	var.start_y_fixationline = -(var.fixationdimension/2)
+	var.end_y_fixationline = (var.fixationdimension/2)
+	__end__
+
+define sketchpad get_ready
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=black font_bold=no font_family=arabic font_italic=no font_size=20 html=yes show_if=always text="" x=0 y=-224 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Sind Sie bereit anzufangen?" x=0 y=-18 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="(Bitte melden Sie sich beim Versuchsleiter, <br />wenn Sie noch weitere Fragen haben.)" x=0 y=71 z_index=0
+
+define sketchpad instruct_1
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=no font_family=hindi font_italic=no font_size=20 html=no show_if=always text="Dieses Experiment befasst sich mit den Gehirnmechanismen, die der Aufmerksamkeit zugrunde liegen. Aufmerksamkeit bezieht sich auf die Fähigkeit, sich auf einige Dinge intensiv zu konzentrieren, während andere Dinge, die potenziell ablenkend sind, ignoriert werden. Menschen sind sehr unterschiedlich begabt darin, Ablenkungen zu ignorieren, und die Untersuchung der kognitiven und hirntechnischen Mechanismen, die diesen Variationen zugrunde liegen, könnte uns helfen zu verstehen, wie Menschen Schwierigkeiten bei der Aufmerksamkeitslenkung verringern könnten." x=-480 y=-256 z_index=0
+	draw textline center=0 color=black font_bold=no font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="In diesem Experiment werden Sie gebeten, sich mit einer Aufgabe zu beschäftigen, bei der Sie ablenkende Dinge ignorieren müssen, und wir werden beurteilen, wie effektiv Sie das tun können. <br />Ich werde Ihnen mehr über die einzelnen Aufgaben erzählen, die Sie zu Beginn jeder Phase durchführen werden." x=-480 y=64 z_index=0
+
+define sketchpad instruct_2
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="In diesem Experiment werden wir transkranielle Magnetstimulation (TMS) verwenden, um die Gehirnaktivität nicht-invasiv zu stimulieren, während Sie die Hauptaufgabe durchführen." x=-480 y=-192 z_index=0
+	draw textline center=0 color=black font_bold=no font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Because conducting experiments with TMS is incredibly costly and effortful, it is EXTREMELY important to our research that people follow the instructions very carefully and exactly as we state. Otherwise we will not get the information that we need and a substantial amount of time and <br />money will be wasted. Does that seem reasonable? Please stop me and ask questions at any point, <br />if any of the instructions aren’t clear. Should we get started with today’s experiment then?  To reiterate: you can interrupt me at any point! :-)" x=-480 y=-32 z_index=0
+
+define logger logger
+	set description "Logs experimental data"
+	set auto_log yes
+
+define pygaze_log message_start_fixdot
+	set throttle 2
+	set msg "Fixdot is presented"
+	set description "Writes information to the eye-tracker logfile"
+	set auto_log no
+
+define pygaze_init new_pygaze_init
+	set tracker_type "Advanced dummy (mouse simulation)"
+	set tobiiglasses_udpport 49152
+	set tobiiglasses_address "192.168.71.50"
+	set smi_send_port 4444
+	set smi_recv_port 5555
+	set smi_ip "127.0.0.1"
+	set sacc_vel_thr 35
+	set sacc_acc_thr 9500
+	set eyelink_pupil_size_mode area
+	set eyelink_force_drift_correct yes
+	set description "Initialize and calibrate eye tracker"
+	set calibrate yes
+	set calbeep yes
+	set alea_api_key "Contact Alea for an API key"
+	set alea_animated_calibration no
+	set _logfile automatic
+
+define pygaze_start_recording new_pygaze_start_recording
+	set status_msg start_trial
+	set description "Puts the eye tracker into recording mode"
+
+define pygaze_stop_recording new_pygaze_stop_recording
+	set status_msg stop_trial
+	set description "Stops recording of eye tracking data"
+
+define repeat_cycle new_repeat_cycle
+	set description "Optionally repeat a cycle from a loop"
+	set condition "[sam_clicked] = no"
+
+define notepad postlab_todos
+	__note__
+	**impement eval jitters in prelab
+	
+	TNT recall via forced choice and eye-tracking?
+	
+	IMDF recall object not only from same instruction but also from same valence (like TNT)?
+	
+	make sure participants click in a specifeid ROI in IMDF /Lotje
+	
+	check if 500 ms is ok for IMDF feedback /CVS
+	
+	figure out exact spacing and dimensions of IMDF scenes and objects /CVS
+	
+	**physio recorded during eval only for scene or also during SAM? /CVS
+	
+	Object rescalling /Lotje
+	
+	**figure out counterbalancing order etc via GA for TNT and IMDF /CVS
+	__end__
+	set description "A simple notepad to document your experiment. This plug-in does nothing."
+
+define sketchpad scene
+	set duration 6500
+	set description "Displays stimuli"
+	draw image center=1 file="[Scene]" scale="[scale_scene_recall]" show_if=always x=0 y=-96 z_index=0
+
+define inline_script set_coordinates_feedback_box
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	# y coordinate of ROI box
+	var.y_box = 285
+	    
+	# x coordinates of ROI box
+	var.x_box1 = -422
+	var.x_box2 = -317
+	var.x_box3 = -210
+	var.x_box4 = -104
+	var.x_box5 = 2
+	var.x_box6 = 106
+	var.x_box7 = 211
+	var.x_box8 = 317
+	var.x_box9 = 423
+	__end__
+
+define inline_script set_scaling_factors
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	var.scale_scene_SAM_eval = 0.7
+	var.scale_scene_recall = 1
+	var.scale_object_recall = 0.5
+	var.scale_object_MC = 0.1
+	var.scale_object_MC_IMDF = 0.2
+	__end__
+
+define sketchpad waiting_for_triggerpulse
+	set duration 3000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Gleich geht es los!" x=-11 y=-6 z_index=0
+
+define sketchpad welcome
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=hindi font_italic=no font_size=30 html=yes show_if=always text="Herzlich willkommen im Experiment!" x=0 y=0 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=0 y=64 z_index=0
+
