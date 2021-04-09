@@ -1,0 +1,2430 @@
+---
+API: 2.1
+OpenSesame: 3.3.9a4
+Platform: posix
+---
+set width 1024
+set uniform_coordinates yes
+set title TNT_prefMRI
+set subject_parity even
+set subject_nr 0
+set start TNT_prefMRI_experiment
+set sound_sample_size -16
+set sound_freq 48000
+set sound_channels 2
+set sound_buf_size 1024
+set sampler_backend psycho
+set round_decimals 2
+set mouse_backend psycho
+set keyboard_backend psycho
+set height 768
+set fullscreen no
+set form_clicks no
+set foreground black
+set font_underline no
+set font_size 20
+set font_italic no
+set font_family mono
+set font_bold no
+set experiment_path "/home/lotje/Documents/Research, teaching and programming/OpenSesame/Scripts/Others/Claudius Schroeder/experimental files"
+set disable_garbage_collection yes
+set description "A template containing a practice and an experimental phase"
+set coordinates uniform
+set compensation 0
+set color_backend psycho
+set clock_backend psycho
+set canvas_backend psycho
+set bidi yes
+set background grey
+
+define notepad CHANGELOG
+	__note__
+	# 2021-02-06 LvdL
+	
+	- Resized and replaced SAMval_new.jpg such that all mannekins can have the
+	    same scaling factor in SAM_sceneresponse and SAM_sceneresponse_feedback
+	- Resized scenes such that an imaginary rectangle around the scenes is 650x650
+	- Changed scaling factor to 1.00 in:
+	    - scenes (sketchpad)
+	    - SAM_sceneresponse (sketchpad)
+	    - SAM_sceneresponse_feedback
+	- Changed scaling factor to 0.7 in:
+	    - TNT_learning_pair
+	    - testfeedback_objectscene_refresher
+	    - criteriontest_objectscenepair
+	- Changed scaling factor to 0.45 in:
+	    - testfeedback_criterion_multiplechoice
+	- Distractor scenes for the 3-alternative MC sketchpad are drawn randomly from the list of scenes, without replacement, such that each scene appears equally often as distractor. This is done separately for:
+	    - TNT_testfeedback_lab_blockloop
+	    - criteriontest_blockloop
+	- Determine whether to rerun testfeedback depending on accuracy (threshold = 80%) and number of runs (threshold = 3 (2))
+	- Determine whether to rerun criterion test depending on accuracy (threshold = 70%) and number of runs (threshold = 2 (3))
+	
+	# 2021-02-25
+	- Checked max number of cycles in testfeedback and criterion test
+	- Added newly scaled images. New dimensions:
+	    - If landscape: width = 1000px, height = adapted
+	    - If portrait: height = 800px, width = adapted
+	- Made variables for the scaling factors (in prelab, not yet in mri and postlab)
+	- Made sure that MC screen only accepts mouse clicks on ROIs (i.e. on
+	target or distractor)
+	    - In testfeedback
+	    - And in criteriontest
+	
+	# 2021-03-19
+	
+	- Made scaling factors of the objects variable (see set_scaling_factors)
+	- For some reason the MC-clicking was not dependent on the previous keypress anymore, so I refixed that
+	- Applied max-rep constraint to criteriontest blockloop
+	-Loop tables for the test feedback and criterion test are read in from a CSV file
+	    in the file pool. In this CSV file, distractors are matched to the target such
+	    that they come from the same valence category. Also, a max reo (of 3) constraint is applied to the valence category.
+	    The first and the last two trials are fillers.
+	    
+	# 2021-04-04
+	
+	- Make sure the order of trials is varied (within the constraints) between test_feedback and criterion_test
+	
+	# 2021-07-04
+	- Applied randomization and mindist and maxrep constraints to the block loops that are no longer sequential (because no physio measures anymore)
+	__end__
+	set description "A simple notepad to document your experiment. This plug-in does nothing."
+
+define sketchpad EXCELLENT
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="AUSGEZEICHNET!!! " x=0 y=0 z_index=0
+
+define notepad Questions_CVS
+	__note__
+	- 
+	- Trial lists for practice 1 and 2 (at the very end)
+	__end__
+	set description "A simple notepad to document your experiment. This plug-in does nothing."
+
+define inline_script SAM_ROI_locator
+	set description "Executes Python code"
+	___run__
+	print(var.cursor_roi)
+	# If a Mannekin is clicked ->
+	
+	if "SAM_" in var.cursor_roi:
+	    var.sam_clicked = "yes"
+	    # Determine x coordinate of the feedback box
+	    var.x_box_fb = var.get("x_box%s" % var.cursor_roi[-1:])
+	    
+	    if int(var.cursor_roi[-1:]) in (1,3,5,7,9):
+	        var.w_box = 128
+	        var.h_box = 128
+	    else:
+	        var.w_box = 70
+	        var.h_box = 70
+	        
+	    var.x_box_fb = var.x_box_fb - (var.w_box/2)
+	    var.y_box_fb = var.y_box - (var.h_box/2)
+	else:
+	    var.sam_clicked = "no"
+	print(var.sam_clicked)
+	__end__
+	set _prepare ""
+
+define loop SAM_click_evaluation1_loop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run SAM_click_evaluation1_sequence
+
+define sequence SAM_click_evaluation1_sequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run SAM_sceneresponse always
+	run SAM_sceneresponse_click always
+	run SAM_ROI_locator always
+	run SAM_sceneresponse_feedback "[sam_clicked] = yes"
+	run new_repeat_cycle always
+
+define loop SAM_evaluation1_loop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order sequential
+	set description "Repeatedly runs another item"
+	set cycles 2
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 evaluation valence
+	setcycle 0 SAM1_png "SAMval1_new.png"
+	setcycle 0 SAM2_png "SAMval2_new.png"
+	setcycle 0 SAM3_png "SAMval3_new.png"
+	setcycle 0 SAM4_png "SAMval4_new.png"
+	setcycle 0 SAM5_png "SAMval5_new.png"
+	setcycle 0 SAM6_png "SAMval6_new.png"
+	setcycle 0 SAM7_png "SAMval7_new.png"
+	setcycle 0 SAM8_png "SAMval8_new.png"
+	setcycle 0 SAM9_png "SAMval9_new.png"
+	setcycle 1 evaluation arousal
+	setcycle 1 SAM1_png "SAMarous1_new.png"
+	setcycle 1 SAM2_png "SAMarous2_new.png"
+	setcycle 1 SAM3_png "SAMarous3_new.png"
+	setcycle 1 SAM4_png "SAMarous4_new.png"
+	setcycle 1 SAM5_png "SAMarous5_new.png"
+	setcycle 1 SAM6_png "SAMarous6_new.png"
+	setcycle 1 SAM7_png "SAMarous7_new.png"
+	setcycle 1 SAM8_png "SAMarous8_new.png"
+	setcycle 1 SAM9_png "SAMarous9_new.png"
+	run SAM_evaluation1_sequence
+
+define sequence SAM_evaluation1_sequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run SAM_click_evaluation1_loop always
+
+define sketchpad SAM_sceneresponse
+	set duration 0
+	set description "Displays stimuli"
+	draw image center=1 file="[SAM1_png]" name="SAM_[evaluation]_1" scale=0.5 show_if=always x=-422 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM2_png]" name="SAM_[evaluation]_2" scale=0.27 show_if=always x=-317 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM3_png]" name="SAM_[evaluation]_3" scale=0.5 show_if=always x=-210 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM4_png]" name="SAM_[evaluation]_4" scale=0.27 show_if=always x=-104 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM5_png]" name="SAM_[evaluation]_5" scale=0.5 show_if=always x=2 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM6_png]" name="SAM_[evaluation]_6" scale=0.27 show_if=always x=106 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM7_png]" name="SAM_[evaluation]_7" scale=0.5 show_if=always x=211 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM8_png]" name="SAM_[evaluation]_8" scale=0.27 show_if=always x=317 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM9_png]" name="SAM_[evaluation]_9" scale=0.5 show_if=always x=423 y="[y_box]" z_index=0
+	draw image center=1 file="[Scene]" scale="[scale_scene_SAM_eval]" show_if=always x=0 y=-96 z_index=0
+
+define mouse_response SAM_sceneresponse_click
+	set timeout 10000
+	set show_cursor yes
+	set linked_sketchpad SAM_sceneresponse
+	set flush yes
+	set event_type mouseclick
+	set duration mouseclick
+	set description "Collects mouse responses"
+
+define feedback SAM_sceneresponse_feedback
+	set reset_variables yes
+	set duration 500
+	set description "Displays stimuli"
+	draw image center=1 file="[SAM1_png]" scale=0.5 show_if=always x=-422 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM2_png]" scale=0.27 show_if=always x=-317 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM3_png]" scale=0.5 show_if=always x=-210 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM4_png]" scale=0.27 show_if=always x=-104 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM5_png]" scale=0.5 show_if=always x=2 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM6_png]" scale=0.27 show_if=always x=106 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM7_png]" scale=0.5 show_if=always x=211 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM8_png]" scale=0.27 show_if=always x=317 y="[y_box]" z_index=0
+	draw image center=1 file="[SAM9_png]" scale=0.5 show_if=always x=423 y="[y_box]" z_index=0
+	draw image center=1 file="[Scene]" scale="[scale_scene_SAM_eval]" show_if=always x=0 y=-96 z_index=0
+	draw rect color=green fill=0 h="[h_box]" penwidth=5 show_if=always w="[w_box]" x="[x_box_fb]" y="[y_box_fb]" z_index=0
+
+define sketchpad THANKS
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="DANKE!" x=0 y=0 z_index=0
+
+define sketchpad TNTF_practice1_lab_end
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=31 y=-1 z_index=0
+
+define sequence TNT_prefMRI_experiment
+	set flush_keyboard yes
+	set description "The main sequence of the experiment"
+	run Todo always
+	run CHANGELOG always
+	run Questions_CVS always
+	run diagnosticQ1_1 always
+	run welcome always
+	run instruct1 always
+	run instruct2 always
+	run instruct3 always
+	run instruct4 always
+	run instruct5 always
+	run instruct6 always
+	run get_ready always
+	run waiting always
+	run fixation always
+	run set_coordinates_feedback_box always
+	run set_scaling_factors always
+	run evaluation1 always
+	run evaluation1_end always
+	run waiting always
+	run learning_instruct always
+	run learning_blockloop never
+	run learning_end always
+	run waiting always
+	run criterion_accuracy always
+	run init_number_of_runs always
+	run init_correct always
+	run testfeedback_instruct1 always
+	run testfeeback_instruct2 always
+	run testfeedback_blockloop never
+	run THANKS always
+	run EXCELLENT always
+	run determine_whether_to_rerun_testfeedback_lab_blockloop never
+	run testfeedback_end always
+	run waiting always
+	run criteriontest_instruct always
+	run criteriontest always
+	run end always
+	run waiting always
+	run practice1_instruct1 always
+	run practice1_instruct2 always
+	run practice1_instruct3 always
+	run practice1 always
+	run diagnosticQ1_instruct always
+	run new_form_base always
+	run diagnosticQ1 always
+	run practice2 always
+	run diagnosticQ2_instruct always
+
+define sequence TNT_testfeedback_trialsequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run cursor_roi_dummi always
+	run testfeedback_criterion_object always
+	run testfeedback_criterion_objectrecall always
+	run determine_x_coordinates always
+	run click_loop_testfeedback "[response_testfeedback_criterion_objectrecall] = w"
+	run determine_accuracy always
+	run testfeedback_correct_feedback "[cursor_roi] = \"roi_scene\" and [response_testfeedback_criterion_objectrecall] = w"
+	run testfeedback_incorrect_feedback "[cursor_roi] != \"roi_scene\" or [response_testfeedback_criterion_objectrecall] = x"
+	run testfeedback_objectscene_refresher always
+	run testfeedback_criterion_fixation always
+	run logger always
+
+define notepad Todo
+	__note__
+	DONE:
+	
+	**Counterbalancing stimuli in blockloop or before? depends on cam./CVS
+	
+	**How to calibrate screen dimensions btw computers in the lab and at the fMRI? - wait until OS is 
+	installed and running on each comp./CVS
+	
+	**Show blank slide instead of second fixcross? - discuss Cam. /CVS
+	
+	**SAM feedback slide with blue square around SAM and feedback that they should click SAM.- next time
+	
+	**Add in TNT_evalutaion_END that pts should press SPACE to begin actual eval when ready./CVS
+	
+	**How to update image size for each trial within blockloop column? - will probably just use one SAM sacle per sketchpad
+	
+	**Implement a SAM slider.
+	
+	**Implement SAM boxes and write inline script to force pts to click in square i.e. not grey area - name all the boxes!/CVS
+	
+	**Dont forget to name manikins if using indiv SAM pics /CVS
+	
+	**Implement inter-trial intrusion rating with button press or verbal feedback for fmri part
+	
+	**Fill in loop content when I get new folder from Cam /CVS
+	
+	**Consider using external excel file for stimuli i.e. loop content via "source" /CVS
+	
+	**look at output and figure out how to change delimeter in excel
+	
+	**How to determine correct response on multiplechoice question? 
+	
+	**How to make multiple choice scene locations random?
+	
+	**uniform scaling of images either in OS or in Py (better for timing)
+	
+	**SAM manikin 3 too small - scaling should be aroun .45 but only for valence - arousal should probably still be at .5
+	
+	***Can read in trial list for each pts from matlab?
+	
+	**screen to screen scaling 
+	
+	**Randomsization of 2 foils for forced choice recognition in test-feedback phase
+	
+	**how to get 80% (testfeedback) and 70% (criterion test) for each condition indiv.?
+	
+	**How to programm for max 2 cycles in testfeedback and max 3 cycles in criterion test?
+	
+	**remeber to change fixationdots to fixationcross for all trials using it and just copy paste the proper code into the sketchpad script (duration might differ /CVS
+	
+	Todo 27.01.2021
+	
+	**Eval jitter from Subbu? - get 3 distrobutions from her /CVS
+	
+	**Resize raw scenes via apython code
+	
+	**Edit MRI T pulse element re note from Robert (in Drafts)
+	
+	Testfeedback and criterion 2 foils match valence - check Subbu's notes /Lotje
+	
+	**Is the scanner sending a pluse every 2 s i.e. TR? /CVS
+	
+	Subtract 5 ms for critical timing?? (not using EEG - but maybe for physio)/CVS
+	
+	make global linked end message for all trials /CVS
+	
+	Add all instructions (edit first one) & rename instruct sketchpads /CVS
+	
+	include fillers in eval - maybe 3 or so for practice
+	
+	consider taking out the scene only slides to speed up even more (ask in Cam.)
+	
+	For the threshold of 80% correct (test feedback) and 70% (criterion test) -> 
+	    should the filler trials be included in this calculation?
+	    - for now they are included
+	    *ask in Cambridge!! /CVS
+	    
+	LOTJE:
+	- Testfeedback loop/ criterion loop should not be entirely random. 
+	    - First and last 2 items should be fillers
+	    - No more than 3 trials from the same condition in a row
+	
+	**implement physio triggers via parallel port plugin /CVS
+	
+	implement pseudorand for all lab phases i.e. no more than 2 of the same in a row via pseudorand script /CVS
+	
+	show second instructions for second testfeedback only if second testfeedback is adminsitered?
+	
+	eval repeats?
+	
+	send questionnaires to Lotje /CVS
+	
+	try to use base form item for questionnaires /CVS
+	
+	add all DF objects and scenes to file pool /CVS
+	
+	update all items in filepool /CVS
+	__end__
+	set description "Some pointers to help you gest started!"
+
+define inline_script choose_distractors_OLD
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	from datamatrix import operations as ops
+	
+	# TODO: Apply that distractors should come from the same category
+	
+	# While any of the three columns match, keep looping ...
+	while any(
+	    row.distractor_scene_1 == row.distractor_scene_2 or
+	    row.distractor_scene_1 == row.Scene or
+	    row.distractor_scene_2 == row.Scene or
+	    
+	    # Added the constraint that all scenes should come from the same category:
+	    
+	    row.Emotion != row.Emotion_distractor_scene_1 or
+	    row.distractor_scene_2 == row.Emotion_distractor_scene_2
+	    
+	    for row in dm
+	):
+	    # Shuffle the two distractor columns. We don't need to shuffle
+	    # the target column, because it is fixed
+	    dm.distractor_scene_1 = ops.shuffle(dm.distractor_scene_1)
+	    dm.distractor_scene_2 = ops.shuffle(dm.distractor_scene_2)
+	    print('shuffling')
+	__end__
+
+define loop click_loop_criteriontest
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run click_sequence_criteriontest
+
+define loop click_loop_testfeedback
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run click_sequence_testfeedback
+
+define sequence click_sequence_criteriontest
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run testfeedback_criterion_multiplechoice always
+	run testfeedback_criterion_multiplechoice_mouse always
+	run set_repeat_variable always
+	run new_repeat_cycle_criterion always
+
+define sequence click_sequence_testfeedback
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run testfeedback_criterion_multiplechoice always
+	run testfeedback_criterion_multiplechoice_mouse always
+	run set_repeat_variable always
+	run new_repeat_cycle_criterion always
+
+define sketchpad countdown1
+	set duration 1000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=35 html=yes show_if=always text=1 x=0 y=0 z_index=0
+
+define sketchpad countdown2
+	set duration 1000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=35 html=yes show_if=always text=2 x=0 y=0 z_index=0
+
+define sketchpad countdown3
+	set duration 1000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=35 html=yes show_if=always text=3 x=0 y=0 z_index=0
+
+define reset_feedback criterion_accuracy
+	set description "Resets the feedback variables, such as 'avg_rt' and 'acc'"
+
+define sketchpad criterion_refresher_end
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Please wait for instructions." x=0 y=0 z_index=0
+
+define loop criteriontest
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run criteriontest_blocksequence
+
+define loop criteriontest_blockloop
+	set source_file "block_loop_criterion_test_PP_[subject_nr].csv"
+	set source file
+	set repeat 0.05
+	set order sequential
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run criteriontest_trialsequence
+
+define sequence criteriontest_blocksequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run criteriontest_refresher_blockloop never
+	run criterion_refresher_end always
+	run init_number_of_runs always
+	run init_correct always
+	run criteriontest_blockloop always
+	run determine_whether_to_rerun_criteriontest_blockloop always
+
+define sketchpad criteriontest_instruct
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Gut gemacht! Jetzt zeigen wir Ihnen in den Abständen weniger Sekunden dieselben gepaarten Objekte und Szenen von vorhin. Bitte nutzen Sie diese Übung, um Ihr Wissen über die Paare zu verstärken. Danach werden wir dieses Wissen testen. Diesmal erhalten Sie KEINE Rückmeldung, <br />ob Sie die richtige Entscheidung getroffen haben! (BITTE DENKEN SIE DARAN DIE MAUS ZU BETÄTIGEN UM DIE RICHTIGE SZENE AUSZUWÄHLEN). " x=-480 y=-96 z_index=0
+
+define sketchpad criteriontest_objectscenepair
+	set duration 2000
+	set description "Displays stimuli"
+	draw image center=1 file="[Object]" scale="[scale_object_refesher]" show_if=always x=0 y=-256 z_index=0
+	draw image center=1 file="[Scene]" scale="[scale_scene_refresher]" show_if=always x=0 y=192 z_index=0
+
+define loop criteriontest_refresher_blockloop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 84
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Emotion neg
+	setcycle 0 Scene "Animals_047_hdisgust.jpg"
+	setcycle 0 Object "sunglasses01.jpg"
+	setcycle 0 Trial_ID filler
+	setcycle 1 Emotion neu
+	setcycle 1 Scene "neutral_053.jpg"
+	setcycle 1 Object "pingpongracket.jpg"
+	setcycle 1 Trial_ID filler
+	setcycle 2 Emotion neg
+	setcycle 2 Scene "Animals_007_h_disgustfear.jpg"
+	setcycle 2 Object "comb02a.jpg"
+	setcycle 2 Trial_ID 1
+	setcycle 3 Emotion neu
+	setcycle 3 Scene "neutral_222.jpg"
+	setcycle 3 Object "feather03a.jpg"
+	setcycle 3 Trial_ID 2
+	setcycle 4 Emotion neg
+	setcycle 4 Scene "Objects_328_hdisgust.jpg"
+	setcycle 4 Object "boot02b.jpg"
+	setcycle 4 Trial_ID 3
+	setcycle 5 Emotion neu
+	setcycle 5 Scene "neutral_227.jpg"
+	setcycle 5 Object "chessboard.jpg"
+	setcycle 5 Trial_ID 4
+	setcycle 6 Emotion neu
+	setcycle 6 Scene "neutral_022.jpg"
+	setcycle 6 Object "pencilsharpener02a.jpg"
+	setcycle 6 Trial_ID 5
+	setcycle 7 Emotion neg
+	setcycle 7 Scene "2900.1_people_crying.jpg"
+	setcycle 7 Object "box01.jpg"
+	setcycle 7 Trial_ID 6
+	setcycle 8 Emotion neg
+	setcycle 8 Scene "9050_people_accident.jpg"
+	setcycle 8 Object "dice05a.jpg"
+	setcycle 8 Trial_ID 7
+	setcycle 9 Emotion neg
+	setcycle 9 Scene "Faces_363_vsad.jpg"
+	setcycle 9 Object "measuringtape01.jpg"
+	setcycle 9 Trial_ID 8
+	setcycle 10 Emotion neu
+	setcycle 10 Scene "neutral_580.jpg"
+	setcycle 10 Object "candle08b.jpg"
+	setcycle 10 Trial_ID 9
+	setcycle 11 Emotion neg
+	setcycle 11 Scene "1304._animal_fear.jpg"
+	setcycle 11 Object "crayon.jpg"
+	setcycle 11 Trial_ID 10
+	setcycle 12 Emotion neu
+	setcycle 12 Scene "neutral_195.jpg"
+	setcycle 12 Object "cup01.jpg"
+	setcycle 12 Trial_ID 11
+	setcycle 13 Emotion neu
+	setcycle 13 Scene "neutral_017.jpg"
+	setcycle 13 Object "hat03b.jpg"
+	setcycle 13 Trial_ID 12
+	setcycle 14 Emotion neg
+	setcycle 14 Scene "Objects_006_hdisgust.jpg"
+	setcycle 14 Object "towel02a.jpg"
+	setcycle 14 Trial_ID 13
+	setcycle 15 Emotion neu
+	setcycle 15 Scene "neutral_100.jpg"
+	setcycle 15 Object "drum.jpg"
+	setcycle 15 Trial_ID 14
+	setcycle 16 Emotion neg
+	setcycle 16 Scene "9412_people_sad.jpg"
+	setcycle 16 Object "book01b.jpg"
+	setcycle 16 Trial_ID 15
+	setcycle 17 Emotion neu
+	setcycle 17 Scene "neutral_144.jpg"
+	setcycle 17 Object "chair.jpg"
+	setcycle 17 Trial_ID 16
+	setcycle 18 Emotion neu
+	setcycle 18 Scene "neutral_066.jpg"
+	setcycle 18 Object "fryingpan02a.jpg"
+	setcycle 18 Trial_ID filler
+	setcycle 19 Emotion neu
+	setcycle 19 Scene "neutral_246.jpg"
+	setcycle 19 Object "stackingrings01a.jpg"
+	setcycle 19 Trial_ID 17
+	setcycle 20 Emotion neg
+	setcycle 20 Scene "People_033_hsad.jpg"
+	setcycle 20 Object "cane.jpg"
+	setcycle 20 Trial_ID 18
+	setcycle 21 Emotion neu
+	setcycle 21 Scene "neutral_007.jpg"
+	setcycle 21 Object "shirt01.jpg"
+	setcycle 21 Trial_ID 19
+	setcycle 22 Emotion neg
+	setcycle 22 Scene "6550_people_fear.jpg"
+	setcycle 22 Object "plasticflower01a.jpg"
+	setcycle 22 Trial_ID 20
+	setcycle 23 Emotion neg
+	setcycle 23 Scene "Animals_087_h.jpg"
+	setcycle 23 Object "scale01.jpg"
+	setcycle 23 Trial_ID filler
+	setcycle 24 Emotion neu
+	setcycle 24 Scene "neutral_098.jpg"
+	setcycle 24 Object "tuque03b.jpg"
+	setcycle 24 Trial_ID 21
+	setcycle 25 Emotion neg
+	setcycle 25 Scene "Animals_041_hfeardisgust.jpg"
+	setcycle 25 Object "hourglass.jpg"
+	setcycle 25 Trial_ID 22
+	setcycle 26 Emotion neg
+	setcycle 26 Scene "People_140_hsad.jpg"
+	setcycle 26 Object "wallet04.jpg"
+	setcycle 26 Trial_ID 23
+	setcycle 27 Emotion neu
+	setcycle 27 Scene "neutral_058.jpg"
+	setcycle 27 Object "handfan01b.jpg"
+	setcycle 27 Trial_ID 24
+	setcycle 28 Emotion neu
+	setcycle 28 Scene "neutral_128.jpg"
+	setcycle 28 Object "bow04.jpg"
+	setcycle 28 Trial_ID 25
+	setcycle 29 Emotion neg
+	setcycle 29 Scene "9414_people_fighting.jpg"
+	setcycle 29 Object "teabag.jpg"
+	setcycle 29 Trial_ID 26
+	setcycle 30 Emotion neu
+	setcycle 30 Scene "neutral_192.jpg"
+	setcycle 30 Object "negativefilm.jpg"
+	setcycle 30 Trial_ID 27
+	setcycle 31 Emotion neu
+	setcycle 31 Scene "neutral_024.jpg"
+	setcycle 31 Object "clothespin03b.jpg"
+	setcycle 31 Trial_ID 28
+	setcycle 32 Emotion neg
+	setcycle 32 Scene "People_127_fearh.jpg"
+	setcycle 32 Object "makeupbrush04.jpg"
+	setcycle 32 Trial_ID 29
+	setcycle 33 Emotion neg
+	setcycle 33 Scene "Objects_283_hsad.jpg"
+	setcycle 33 Object " microscope.jpg"
+	setcycle 33 Trial_ID filler
+	setcycle 34 Emotion neg
+	setcycle 34 Scene "9440_object_disgustandfear.jpg"
+	setcycle 34 Object "glassmop.jpg"
+	setcycle 34 Trial_ID 30
+	setcycle 35 Emotion neg
+	setcycle 35 Scene "2700._people_crying_sad.jpg"
+	setcycle 35 Object "pillow02b.jpg"
+	setcycle 35 Trial_ID 31
+	setcycle 36 Emotion neu
+	setcycle 36 Scene "neutral_716.jpg"
+	setcycle 36 Object "waterbottle03.jpg"
+	setcycle 36 Trial_ID filler
+	setcycle 37 Emotion neg
+	setcycle 37 Scene "People_201_vsadterror.jpg"
+	setcycle 37 Object "globe.jpg"
+	setcycle 37 Trial_ID 32
+	setcycle 38 Emotion neu
+	setcycle 38 Scene "neutral_374.jpg"
+	setcycle 38 Object "rubberglove02b.jpg"
+	setcycle 38 Trial_ID 33
+	setcycle 39 Emotion neg
+	setcycle 39 Scene "9290_object_disgsut.jpg"
+	setcycle 39 Object "clipboard.jpg"
+	setcycle 39 Trial_ID 34
+	setcycle 40 Emotion neu
+	setcycle 40 Scene "neutral_065.jpg"
+	setcycle 40 Object "pylon.jpg"
+	setcycle 40 Trial_ID 35
+	setcycle 41 Emotion neu
+	setcycle 41 Scene "neutral_390.jpg"
+	setcycle 41 Object "toothbrush03b.jpg"
+	setcycle 41 Trial_ID 36
+	setcycle 42 Emotion neu
+	setcycle 42 Scene "neutral_509.jpg"
+	setcycle 42 Object "battery02b.jpg"
+	setcycle 42 Trial_ID 37
+	setcycle 43 Emotion neg
+	setcycle 43 Scene "People_225_hdisgustsad.jpg"
+	setcycle 43 Object "envelope03a.jpg"
+	setcycle 43 Trial_ID 38
+	setcycle 44 Emotion neu
+	setcycle 44 Scene "neutral_226.jpg"
+	setcycle 44 Object "ring01.jpg"
+	setcycle 44 Trial_ID 39
+	setcycle 45 Emotion neu
+	setcycle 45 Scene "neutral_050.jpg"
+	setcycle 45 Object "medal02b.jpg"
+	setcycle 45 Trial_ID 40
+	setcycle 46 Emotion neg
+	setcycle 46 Scene "8480_people_fear.jpg"
+	setcycle 46 Object "safetypin.jpg"
+	setcycle 46 Trial_ID 41
+	setcycle 47 Emotion neg
+	setcycle 47 Scene "Animals_020_h_fear.jpg"
+	setcycle 47 Object "lightbulb01.jpg"
+	setcycle 47 Trial_ID filler
+	setcycle 48 Emotion neg
+	setcycle 48 Scene "1201_animal_fearanddisgust.jpg"
+	setcycle 48 Object "ruler05.jpg"
+	setcycle 48 Trial_ID 42
+	setcycle 49 Emotion neu
+	setcycle 49 Scene "neutral_659.jpg"
+	setcycle 49 Object "lock03a.jpg"
+	setcycle 49 Trial_ID 43
+	setcycle 50 Emotion neg
+	setcycle 50 Scene "Objects_021_vdisgust.jpg"
+	setcycle 50 Object "thimble.jpg"
+	setcycle 50 Trial_ID 44
+	setcycle 51 Emotion neu
+	setcycle 51 Scene "neutral_107.jpg"
+	setcycle 51 Object "baseball01a.jpg"
+	setcycle 51 Trial_ID 45
+	setcycle 52 Emotion neu
+	setcycle 52 Scene "neutral_421.jpg"
+	setcycle 52 Object "paintroller01.jpg"
+	setcycle 52 Trial_ID filler
+	setcycle 53 Emotion neg
+	setcycle 53 Scene "9421_people_sad.jpg"
+	setcycle 53 Object "protractor.jpg"
+	setcycle 53 Trial_ID 46
+	setcycle 54 Emotion neu
+	setcycle 54 Scene "neutral_614.jpg"
+	setcycle 54 Object "birdie.jpg"
+	setcycle 54 Trial_ID 47
+	setcycle 55 Emotion neg
+	setcycle 55 Scene "People_077_vfear.jpg"
+	setcycle 55 Object "hanger02a.jpg"
+	setcycle 55 Trial_ID 48
+	setcycle 56 Emotion neu
+	setcycle 56 Scene "neutral_247.jpg"
+	setcycle 56 Object "lifejacket.jpg"
+	setcycle 56 Trial_ID 49
+	setcycle 57 Emotion neg
+	setcycle 57 Scene "2703_people_cryingsad.jpg"
+	setcycle 57 Object "bag.jpg"
+	setcycle 57 Trial_ID 50
+	setcycle 58 Emotion neu
+	setcycle 58 Scene "neutral_706.jpg"
+	setcycle 58 Object "fan.jpg"
+	setcycle 58 Trial_ID 51
+	setcycle 59 Emotion neu
+	setcycle 59 Scene "neutral_064.jpg"
+	setcycle 59 Object "tape02a.jpg"
+	setcycle 59 Trial_ID 52
+	setcycle 60 Emotion neg
+	setcycle 60 Scene "Animals_221_hdisgustfear.jpg"
+	setcycle 60 Object "binoculars01b.jpg"
+	setcycle 60 Trial_ID 53
+	setcycle 61 Emotion neu
+	setcycle 61 Scene "neutral_197.jpg"
+	setcycle 61 Object "match.jpg"
+	setcycle 61 Trial_ID fillrt
+	setcycle 62 Emotion neg
+	setcycle 62 Scene "Animals_008_v_disgust.jpg"
+	setcycle 62 Object "spoon01.jpg"
+	setcycle 62 Trial_ID 54
+	setcycle 63 Emotion neg
+	setcycle 63 Scene "2981_animal_disgust.jpg"
+	setcycle 63 Object "mirror.jpg"
+	setcycle 63 Trial_ID 55
+	setcycle 64 Emotion neg
+	setcycle 64 Scene "Objects_106_vdisgust.jpg"
+	setcycle 64 Object "brick.jpg"
+	setcycle 64 Trial_ID filler
+	setcycle 65 Emotion neg
+	setcycle 65 Scene "1033_animal_fearanddisgust.jpg"
+	setcycle 65 Object "key01.jpg"
+	setcycle 65 Trial_ID 56
+	setcycle 66 Emotion neu
+	setcycle 66 Scene "neutral_409.jpg"
+	setcycle 66 Object "violin.jpg"
+	setcycle 66 Trial_ID 57
+	setcycle 67 Emotion neg
+	setcycle 67 Scene "9940_object_fear.jpg"
+	setcycle 67 Object "branch02.jpg"
+	setcycle 67 Trial_ID 58
+	setcycle 68 Emotion neu
+	setcycle 68 Scene "neutral_582.jpg"
+	setcycle 68 Object "hinge.jpg"
+	setcycle 68 Trial_ID 59
+	setcycle 69 Emotion neu
+	setcycle 69 Scene "neutral_331.jpg"
+	setcycle 69 Object "radio02.jpg"
+	setcycle 69 Trial_ID 60
+	setcycle 70 Emotion neu
+	setcycle 70 Scene "neutral_293.jpg"
+	setcycle 70 Object "belt02a.jpg"
+	setcycle 70 Trial_ID 61
+	setcycle 71 Emotion neg
+	setcycle 71 Scene "Faces_368_hsaddisgust.jpg"
+	setcycle 71 Object "seashell.jpg"
+	setcycle 71 Trial_ID 62
+	setcycle 72 Emotion neg
+	setcycle 72 Scene "2811_object_fear.jpg"
+	setcycle 72 Object "measuringcup01.jpg"
+	setcycle 72 Trial_ID 63
+	setcycle 73 Emotion neu
+	setcycle 73 Scene "neutral_310.jpg"
+	setcycle 73 Object "playingcard04.jpg"
+	setcycle 73 Trial_ID 64
+	setcycle 74 Emotion neg
+	setcycle 74 Scene "6520_people_fear.jpg"
+	setcycle 74 Object "calculator01.jpg"
+	setcycle 74 Trial_ID 65
+	setcycle 75 Emotion neu
+	setcycle 75 Scene "neutral_380.jpg"
+	setcycle 75 Object "watch02a.jpg"
+	setcycle 75 Trial_ID 66
+	setcycle 76 Emotion neg
+	setcycle 76 Scene "People_001_hsadterror.jpg"
+	setcycle 76 Object "stapler03a.jpg"
+	setcycle 76 Trial_ID 67
+	setcycle 77 Emotion neu
+	setcycle 77 Scene "neutral_550.jpg"
+	setcycle 77 Object "magnifyingglass01b.jpg"
+	setcycle 77 Trial_ID 68
+	setcycle 78 Emotion neg
+	setcycle 78 Scene "9433_people-disgust.jpg"
+	setcycle 78 Object "pictureframe04.jpg"
+	setcycle 78 Trial_ID 69
+	setcycle 79 Emotion neu
+	setcycle 79 Scene "neutral_512.jpg"
+	setcycle 79 Object "binder03b.jpg"
+	setcycle 79 Trial_ID 70
+	setcycle 80 Emotion neu
+	setcycle 80 Scene "neutral_134.jpg"
+	setcycle 80 Object "bottlecap.jpg"
+	setcycle 80 Trial_ID 71
+	setcycle 81 Emotion neg
+	setcycle 81 Scene "9183_animal_disgustandsad.jpg"
+	setcycle 81 Object "flashlight02b.jpg"
+	setcycle 81 Trial_ID 72
+	setcycle 82 Emotion filler
+	setcycle 82 Scene "People_121_hsad.jpg"
+	setcycle 82 Object "CD.jpg"
+	setcycle 82 Trial_ID filler
+	setcycle 83 Emotion filler
+	setcycle 83 Scene "neutral_169.jpg"
+	setcycle 83 Object "button01.jpg"
+	setcycle 83 Trial_ID filler
+	constrain Emotion maxrep=3
+	constrain Trial_ID mindist=2
+	run criteriontest_refresher_trialsequence
+
+define sequence criteriontest_refresher_trialsequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run criteriontest_objectscenepair always
+	run logger always
+
+define sequence criteriontest_trialsequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run testfeedback_criterion_object always
+	run testfeedback_criterion_objectrecall always
+	run determine_x_coordinates always
+	run click_loop_criteriontest "[response_testfeedback_criterion_objectrecall] = w"
+	run determine_accuracy always
+	run testfeedback_criterion_fixation always
+	run logger always
+
+define inline_script cursor_roi_dummi
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	# creates dummi variable so that runif statement wont crash when multiplechoice isnt presented
+	var.cursor_roi = 0
+	__end__
+
+define inline_script define_TNT_testfeedback_lab_blockloop
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	from pseudorandom import Enforce, MaxRep, MinDist
+	
+	# Get the loop table from the block_loop. This is the original table
+	# as you see it in OpenSesame, before shuffling etc.
+	# NOTE: The fillers should NOT be included in this loop. They will be added later:
+	dm = items['criteriontest_blockloop'].dm
+	# Shuffle the loop:
+	dm = ops.shuffle(dm)
+	
+	# Add 8 fillers to the dm
+	# (NOTE: we leave out 4 fillers, 2 for the beginning and 2 for the end)
+	dm = dm << dm_fillers[0:8]
+	print(dm.length)
+	# Create an Enforce object, and add the max-repetition constraint
+	# NOTE: for the moment there is no filler constraint
+	ef = Enforce(dm)
+	ef.add_constraint(MaxRep, cols=[dm.Emotion], maxrep = 3)
+	
+	# Enforce the constraints
+	dm = ef.enforce()
+	
+	# Add two fillers to the end:
+	dm = dm << dm_fillers[8:10]
+	
+	# Add two fillers to the beginning:
+	dm = dm_fillers[10:] << dm
+	__end__
+
+define inline_script define_criteriontest_blockloop
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	from pseudorandom import Enforce, MaxRep, MinDist
+	
+	# Get the loop table from the block_loop. This is the original table
+	# as you see it in OpenSesame, before shuffling etc.
+	# NOTE: The fillers should NOT be included in this loop. They will be added later:
+	dm = items['criteriontest_blockloop'].dm
+	# Shuffle the loop:
+	dm = ops.shuffle(dm)
+	
+	
+	print(dm.Emotion.unique)
+	dm_negative, dm_neutral = ops.split(dm.Emotion)
+	
+	print(dm_negative)
+	quit()
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	# Add 8 fillers to the dm
+	# (NOTE: we leave out 4 fillers, 2 for the beginning and 2 for the end)
+	dm = dm << dm_fillers[0:8]
+	print(dm.length)
+	# Create an Enforce object, and add the max-repetition constraint
+	# NOTE: for the moment there is no filler constraint
+	ef = Enforce(dm)
+	ef.add_constraint(MaxRep, cols=[dm.Emotion], maxrep = 3)
+	
+	# Enforce the constraints
+	dm = ef.enforce()
+	
+	# Add two fillers to the end:
+	dm = dm << dm_fillers[8:10]
+	
+	# Add two fillers to the beginning:
+	dm = dm_fillers[10:] << dm
+	__end__
+
+define inline_script define_filler_dm
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	from datamatrix import io
+	from datamatrix import operations as ops
+	
+	# Read a dm containing fillers from the file pool:
+	dm_fillers = io.readtxt(pool['dm_fillers_criterion_test.csv'])
+	# Shuffle the fillers:
+	dm_fillers = ops.shuffle(dm_fillers)
+	__end__
+
+define inline_script determine_accuracy
+	set description "Executes Python code"
+	___run__
+	# determine wether the response was correct 
+	if var.response_testfeedback_criterion_objectrecall != "w":
+	    responses.add(correct = 0)
+	else: 
+	    if var.cursor_roi == "roi_scene":
+	        responses.add(correct = 1)
+	        var.correct = 1
+	    else: 
+	        responses.add(correct = 0)
+	        var.correct = 0
+	
+	# Determine whether the current scene is neutral or negative:
+	var.category = var.Emotion.split("-")[0]
+	
+	print(var.category)
+	# Update the category-specific score:
+	if var.category == "neu":
+	    var.n_correct_neutral = var.n_correct_neutral + var.correct
+	elif var.category == "neg":
+	    var.n_correct_neg = var.n_correct_neg + var.correct
+	
+	else:
+	    raise Exception("Unknown category")
+	
+	print("n correct neutral: ", var.n_correct_neutral)
+	print("n correct neg: ", var.n_correct_neg)
+	__end__
+	set _prepare ""
+
+define inline_script determine_whether_to_rerun_criteriontest_blockloop
+	set description "Executes Python code"
+	___run__
+	# TODO: test all possibilities:
+	# If both criteria are met -> exp should continue
+	# If only one criterion is met -> rerun
+	# If number of runs exceeds threshold -> exp should continue
+	
+	
+	# Threshold number of correct trials:
+	var.threshold = int(84*.70) # In number of trials (instead of %)
+	# Uncomment for quick testing:
+	#var.threshold = 2 # In number of trials (instead of %)
+	
+	# Max cycles:
+	var.n_max_runs = 3
+	
+	print('start comparing...')
+	
+	# Compare score to threshold:
+	if var.n_correct_neg < var.threshold or var.n_correct_neutral < var.threshold:
+	    var.rerun_feedback_loop = "yes"
+	    print("acc criteria not met")
+	else:
+	    var.rerun_feedback_loop = "no"
+	    # Show the EXCELLENT screen:
+	    items.execute("EXCELLENT")
+	
+	# If criteria are not met:
+	if var.rerun_feedback_loop == "yes":
+	    
+	    print("NR OF RUNS = ", var.n_runs)
+	
+	    if var.n_runs < var.n_max_runs:
+	    
+	        # Increase the counter of the attempts (runs):
+	        var.n_runs = var.n_runs + 1
+	        
+	        # Show the THANKS screen:
+	        items.execute("THANKS")
+	
+	        
+	        # Reset the correct counters:
+	        items.execute("init_correct")
+	        
+	        # Rerun the test feedback loop:
+	        items.execute("criteriontest_blockloop")
+	        
+	        items.execute("determine_whether_to_rerun_criteriontest_blockloop")
+	    else:
+	        print("MAX NR OF RUNS = MET")
+	__end__
+	set _prepare ""
+
+define inline_script determine_whether_to_rerun_testfeedback_lab_blockloop
+	set description "Executes Python code"
+	___run__
+	# TODO: test all possibilities:
+	# If both criteria are met -> exp should continue
+	# If only one criterion is met -> rerun
+	# If number of runs exceeds threshold -> exp should continue
+	
+	# Threshold number of correct trials:
+	var.threshold = int(84*.80) # In number of trials (instead of %)
+	# Uncomment for quick testing:
+	#var.threshold = 2 # In number of trials (instead of %)
+	
+	# Max cycles:
+	var.n_max_runs = 2
+	
+	print('start comparing...')
+	
+	# Compare score to threshold:
+	if var.n_correct_neg < var.threshold or var.n_correct_neutral < var.threshold:
+	    var.rerun_feedback_loop = "yes"
+	    print("acc criteria not met")
+	else:
+	    var.rerun_feedback_loop = "no"
+	    # Show the EXCELLENT screen:
+	    items.execute("EXCELLENT")
+	
+	# If criteria are not met:
+	if var.rerun_feedback_loop == "yes":
+	    
+	    print("NR OF RUNS = ", var.n_runs)
+	
+	    if var.n_runs < var.n_max_runs:
+	    
+	        # Increase the counter of the attempts (runs):
+	        var.n_runs = var.n_runs + 1
+	        
+	        # Show the THANKS screen:
+	        items.execute("THANKS")
+	
+	        
+	        # Reset the correct counters:
+	        items.execute("init_correct")
+	        
+	        # Rerun the test feedback loop:
+	        items.execute("TNT_testfeedback_lab_blockloop")
+	        
+	        items.execute("determine_whether_to_rerun_testfeedback_lab_blockloop")
+	    else:
+	        print("MAX NR OF RUNS = MET")
+	__end__
+	set _prepare ""
+
+define inline_script determine_x_coordinates
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	x_list = [-300, 0, 300]
+	import random
+	random.shuffle(x_list)
+	print(x_list)
+	var.x1,var.x2,var.x3 = x_list
+	print("XXX")
+	__end__
+
+define form_multiple_choice diagnosticQ1
+	set timeout infinite
+	set spacing 10
+	set question "1. Wenn Hinweiswörter auf dem Bildschirm eingeblendet wurden, wie viel Zeit haben Sie damit verbracht, diese zu betrachten, ohne Ihren Blick zu verlagern?"
+	__options__
+	0. Habe Sie nicht angesehen
+	1.
+	2. Die Hälfte der Zeit
+	3. 
+	4. Die ganze Zeit
+	__end__
+	set margins "50;50;50;50"
+	set form_var response
+	set form_title "ALLE VERSUCHE"
+	set description "A simple multiple choice item"
+	set button_text Weiter
+	set allow_multiple yes
+	set advance_immediately yes
+	set _theme gray
+
+define form_multiple_choice diagnosticQ1_1
+	set timeout infinite
+	set spacing 10
+	set question "1. Wenn Hinweiswörter auf dem Bildschirm eingeblendet wurden, wie viel Zeit haben Sie damit verbracht, diese zu betrachten, ohne Ihren Blick zu verlagern?"
+	__options__
+	0. Habe Sie nicht angesehen
+	1.
+	2. Die Hälfte der Zeit
+	3. 
+	4. Die ganze Zeit
+	__end__
+	set margins "50;50;50;50"
+	set form_var response
+	set form_title "ALLE VERSUCHE"
+	set description "A simple multiple choice item"
+	set button_text Weiter
+	set allow_multiple yes
+	set advance_immediately yes
+	set _theme gray
+
+define sketchpad diagnosticQ1_instruct
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Wie haben Sie das empfunden? Es wird am Anfang wirklich schwierig sein nicht an die Antwortszenen, die zu den roteingerahmten Hinweisobjekten gehören, zu denken, gerade weil <br />Sie die Paare so gut gelernt haben - aber bleiben Sie dran und versuchen Sie Ihr Bestes!<br /><br />Um sicherzustellen, dass ich die Anweisungen klar und deutlich erklärt habe, möchte ich an <br />dieser Stelle einen kleinen Fragebogen mit Ihnen durchgehen." x=-480 y=-128 z_index=0
+
+define sketchpad diagnosticQ2_instruct
+	set duration keypress
+	set description "Displays stimuli"
+
+define sketchpad end
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=18 y=-4 z_index=0
+
+define loop evaluation1
+	set source_file ""
+	set source table
+	set skip 0
+	set repeat 1
+	set order random
+	set offset no
+	set item block_sequence
+	set description "A loop containing one or more experimental blocks"
+	set cycles 1
+	set continuous no
+	set column_order practice
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 empty_column ""
+	run evaluation1_blocksequence
+
+define loop evaluation1_blockloop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 84
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Emotion neg
+	setcycle 0 Scene "Animals_047_hdisgust.jpg"
+	setcycle 0 Object "sunglasses01.jpg"
+	setcycle 0 Trial_ID filler
+	setcycle 1 Emotion neu
+	setcycle 1 Scene "neutral_053.jpg"
+	setcycle 1 Object "pingpongracket.jpg"
+	setcycle 1 Trial_ID filler
+	setcycle 2 Emotion neg
+	setcycle 2 Scene "Animals_007_h_disgustfear.jpg"
+	setcycle 2 Object "comb02a.jpg"
+	setcycle 2 Trial_ID 1
+	setcycle 3 Emotion neu
+	setcycle 3 Scene "neutral_222.jpg"
+	setcycle 3 Object "feather03a.jpg"
+	setcycle 3 Trial_ID 2
+	setcycle 4 Emotion neg
+	setcycle 4 Scene "Objects_328_hdisgust.jpg"
+	setcycle 4 Object "boot02b.jpg"
+	setcycle 4 Trial_ID 3
+	setcycle 5 Emotion neu
+	setcycle 5 Scene "neutral_227.jpg"
+	setcycle 5 Object "chessboard.jpg"
+	setcycle 5 Trial_ID 4
+	setcycle 6 Emotion neu
+	setcycle 6 Scene "neutral_022.jpg"
+	setcycle 6 Object "pencilsharpener02a.jpg"
+	setcycle 6 Trial_ID 5
+	setcycle 7 Emotion neg
+	setcycle 7 Scene "2900.1_people_crying.jpg"
+	setcycle 7 Object "box01.jpg"
+	setcycle 7 Trial_ID 6
+	setcycle 8 Emotion neg
+	setcycle 8 Scene "9050_people_accident.jpg"
+	setcycle 8 Object "dice05a.jpg"
+	setcycle 8 Trial_ID 7
+	setcycle 9 Emotion neg
+	setcycle 9 Scene "Faces_363_vsad.jpg"
+	setcycle 9 Object "measuringtape01.jpg"
+	setcycle 9 Trial_ID 8
+	setcycle 10 Emotion neu
+	setcycle 10 Scene "neutral_580.jpg"
+	setcycle 10 Object "candle08b.jpg"
+	setcycle 10 Trial_ID 9
+	setcycle 11 Emotion neg
+	setcycle 11 Scene "1304._animal_fear.jpg"
+	setcycle 11 Object "crayon.jpg"
+	setcycle 11 Trial_ID 10
+	setcycle 12 Emotion neu
+	setcycle 12 Scene "neutral_195.jpg"
+	setcycle 12 Object "cup01.jpg"
+	setcycle 12 Trial_ID 11
+	setcycle 13 Emotion neu
+	setcycle 13 Scene "neutral_017.jpg"
+	setcycle 13 Object "hat03b.jpg"
+	setcycle 13 Trial_ID 12
+	setcycle 14 Emotion neg
+	setcycle 14 Scene "Objects_006_hdisgust.jpg"
+	setcycle 14 Object "towel02a.jpg"
+	setcycle 14 Trial_ID 13
+	setcycle 15 Emotion neu
+	setcycle 15 Scene "neutral_100.jpg"
+	setcycle 15 Object "drum.jpg"
+	setcycle 15 Trial_ID 14
+	setcycle 16 Emotion neg
+	setcycle 16 Scene "9412_people_sad.jpg"
+	setcycle 16 Object "book01b.jpg"
+	setcycle 16 Trial_ID 15
+	setcycle 17 Emotion neu
+	setcycle 17 Scene "neutral_144.jpg"
+	setcycle 17 Object "chair.jpg"
+	setcycle 17 Trial_ID 16
+	setcycle 18 Emotion neu
+	setcycle 18 Scene "neutral_066.jpg"
+	setcycle 18 Object "fryingpan02a.jpg"
+	setcycle 18 Trial_ID filler
+	setcycle 19 Emotion neu
+	setcycle 19 Scene "neutral_246.jpg"
+	setcycle 19 Object "stackingrings01a.jpg"
+	setcycle 19 Trial_ID 17
+	setcycle 20 Emotion neg
+	setcycle 20 Scene "People_033_hsad.jpg"
+	setcycle 20 Object "cane.jpg"
+	setcycle 20 Trial_ID 18
+	setcycle 21 Emotion neu
+	setcycle 21 Scene "neutral_007.jpg"
+	setcycle 21 Object "shirt01.jpg"
+	setcycle 21 Trial_ID 19
+	setcycle 22 Emotion neg
+	setcycle 22 Scene "6550_people_fear.jpg"
+	setcycle 22 Object "plasticflower01a.jpg"
+	setcycle 22 Trial_ID 20
+	setcycle 23 Emotion neg
+	setcycle 23 Scene "Animals_087_h.jpg"
+	setcycle 23 Object "scale01.jpg"
+	setcycle 23 Trial_ID filler
+	setcycle 24 Emotion neu
+	setcycle 24 Scene "neutral_098.jpg"
+	setcycle 24 Object "tuque03b.jpg"
+	setcycle 24 Trial_ID 21
+	setcycle 25 Emotion neg
+	setcycle 25 Scene "Animals_041_hfeardisgust.jpg"
+	setcycle 25 Object "hourglass.jpg"
+	setcycle 25 Trial_ID 22
+	setcycle 26 Emotion neg
+	setcycle 26 Scene "People_140_hsad.jpg"
+	setcycle 26 Object "wallet04.jpg"
+	setcycle 26 Trial_ID 23
+	setcycle 27 Emotion neu
+	setcycle 27 Scene "neutral_058.jpg"
+	setcycle 27 Object "handfan01b.jpg"
+	setcycle 27 Trial_ID 24
+	setcycle 28 Emotion neu
+	setcycle 28 Scene "neutral_128.jpg"
+	setcycle 28 Object "bow04.jpg"
+	setcycle 28 Trial_ID 25
+	setcycle 29 Emotion neg
+	setcycle 29 Scene "9414_people_fighting.jpg"
+	setcycle 29 Object "teabag.jpg"
+	setcycle 29 Trial_ID 26
+	setcycle 30 Emotion neu
+	setcycle 30 Scene "neutral_192.jpg"
+	setcycle 30 Object "negativefilm.jpg"
+	setcycle 30 Trial_ID 27
+	setcycle 31 Emotion neu
+	setcycle 31 Scene "neutral_024.jpg"
+	setcycle 31 Object "clothespin03b.jpg"
+	setcycle 31 Trial_ID 28
+	setcycle 32 Emotion neg
+	setcycle 32 Scene "People_127_fearh.jpg"
+	setcycle 32 Object "makeupbrush04.jpg"
+	setcycle 32 Trial_ID 29
+	setcycle 33 Emotion neg
+	setcycle 33 Scene "Objects_283_hsad.jpg"
+	setcycle 33 Object " microscope.jpg"
+	setcycle 33 Trial_ID filler
+	setcycle 34 Emotion neg
+	setcycle 34 Scene "9440_object_disgustandfear.jpg"
+	setcycle 34 Object "glassmop.jpg"
+	setcycle 34 Trial_ID 30
+	setcycle 35 Emotion neg
+	setcycle 35 Scene "2700._people_crying_sad.jpg"
+	setcycle 35 Object "pillow02b.jpg"
+	setcycle 35 Trial_ID 31
+	setcycle 36 Emotion neu
+	setcycle 36 Scene "neutral_716.jpg"
+	setcycle 36 Object "waterbottle03.jpg"
+	setcycle 36 Trial_ID filler
+	setcycle 37 Emotion neg
+	setcycle 37 Scene "People_201_vsadterror.jpg"
+	setcycle 37 Object "globe.jpg"
+	setcycle 37 Trial_ID 32
+	setcycle 38 Emotion neu
+	setcycle 38 Scene "neutral_374.jpg"
+	setcycle 38 Object "rubberglove02b.jpg"
+	setcycle 38 Trial_ID 33
+	setcycle 39 Emotion neg
+	setcycle 39 Scene "9290_object_disgsut.jpg"
+	setcycle 39 Object "clipboard.jpg"
+	setcycle 39 Trial_ID 34
+	setcycle 40 Emotion neu
+	setcycle 40 Scene "neutral_065.jpg"
+	setcycle 40 Object "pylon.jpg"
+	setcycle 40 Trial_ID 35
+	setcycle 41 Emotion neu
+	setcycle 41 Scene "neutral_390.jpg"
+	setcycle 41 Object "toothbrush03b.jpg"
+	setcycle 41 Trial_ID 36
+	setcycle 42 Emotion neu
+	setcycle 42 Scene "neutral_509.jpg"
+	setcycle 42 Object "battery02b.jpg"
+	setcycle 42 Trial_ID 37
+	setcycle 43 Emotion neg
+	setcycle 43 Scene "People_225_hdisgustsad.jpg"
+	setcycle 43 Object "envelope03a.jpg"
+	setcycle 43 Trial_ID 38
+	setcycle 44 Emotion neu
+	setcycle 44 Scene "neutral_226.jpg"
+	setcycle 44 Object "ring01.jpg"
+	setcycle 44 Trial_ID 39
+	setcycle 45 Emotion neu
+	setcycle 45 Scene "neutral_050.jpg"
+	setcycle 45 Object "medal02b.jpg"
+	setcycle 45 Trial_ID 40
+	setcycle 46 Emotion neg
+	setcycle 46 Scene "8480_people_fear.jpg"
+	setcycle 46 Object "safetypin.jpg"
+	setcycle 46 Trial_ID 41
+	setcycle 47 Emotion neg
+	setcycle 47 Scene "Animals_020_h_fear.jpg"
+	setcycle 47 Object "lightbulb01.jpg"
+	setcycle 47 Trial_ID filler
+	setcycle 48 Emotion neg
+	setcycle 48 Scene "1201_animal_fearanddisgust.jpg"
+	setcycle 48 Object "ruler05.jpg"
+	setcycle 48 Trial_ID 42
+	setcycle 49 Emotion neu
+	setcycle 49 Scene "neutral_659.jpg"
+	setcycle 49 Object "lock03a.jpg"
+	setcycle 49 Trial_ID 43
+	setcycle 50 Emotion neg
+	setcycle 50 Scene "Objects_021_vdisgust.jpg"
+	setcycle 50 Object "thimble.jpg"
+	setcycle 50 Trial_ID 44
+	setcycle 51 Emotion neu
+	setcycle 51 Scene "neutral_107.jpg"
+	setcycle 51 Object "baseball01a.jpg"
+	setcycle 51 Trial_ID 45
+	setcycle 52 Emotion neu
+	setcycle 52 Scene "neutral_421.jpg"
+	setcycle 52 Object "paintroller01.jpg"
+	setcycle 52 Trial_ID filler
+	setcycle 53 Emotion neg
+	setcycle 53 Scene "9421_people_sad.jpg"
+	setcycle 53 Object "protractor.jpg"
+	setcycle 53 Trial_ID 46
+	setcycle 54 Emotion neu
+	setcycle 54 Scene "neutral_614.jpg"
+	setcycle 54 Object "birdie.jpg"
+	setcycle 54 Trial_ID 47
+	setcycle 55 Emotion neg
+	setcycle 55 Scene "People_077_vfear.jpg"
+	setcycle 55 Object "hanger02a.jpg"
+	setcycle 55 Trial_ID 48
+	setcycle 56 Emotion neu
+	setcycle 56 Scene "neutral_247.jpg"
+	setcycle 56 Object "lifejacket.jpg"
+	setcycle 56 Trial_ID 49
+	setcycle 57 Emotion neg
+	setcycle 57 Scene "2703_people_cryingsad.jpg"
+	setcycle 57 Object "bag.jpg"
+	setcycle 57 Trial_ID 50
+	setcycle 58 Emotion neu
+	setcycle 58 Scene "neutral_706.jpg"
+	setcycle 58 Object "fan.jpg"
+	setcycle 58 Trial_ID 51
+	setcycle 59 Emotion neu
+	setcycle 59 Scene "neutral_064.jpg"
+	setcycle 59 Object "tape02a.jpg"
+	setcycle 59 Trial_ID 52
+	setcycle 60 Emotion neg
+	setcycle 60 Scene "Animals_221_hdisgustfear.jpg"
+	setcycle 60 Object "binoculars01b.jpg"
+	setcycle 60 Trial_ID 53
+	setcycle 61 Emotion neu
+	setcycle 61 Scene "neutral_197.jpg"
+	setcycle 61 Object "match.jpg"
+	setcycle 61 Trial_ID fillrt
+	setcycle 62 Emotion neg
+	setcycle 62 Scene "Animals_008_v_disgust.jpg"
+	setcycle 62 Object "spoon01.jpg"
+	setcycle 62 Trial_ID 54
+	setcycle 63 Emotion neg
+	setcycle 63 Scene "2981_animal_disgust.jpg"
+	setcycle 63 Object "mirror.jpg"
+	setcycle 63 Trial_ID 55
+	setcycle 64 Emotion neg
+	setcycle 64 Scene "Objects_106_vdisgust.jpg"
+	setcycle 64 Object "brick.jpg"
+	setcycle 64 Trial_ID filler
+	setcycle 65 Emotion neg
+	setcycle 65 Scene "1033_animal_fearanddisgust.jpg"
+	setcycle 65 Object "key01.jpg"
+	setcycle 65 Trial_ID 56
+	setcycle 66 Emotion neu
+	setcycle 66 Scene "neutral_409.jpg"
+	setcycle 66 Object "violin.jpg"
+	setcycle 66 Trial_ID 57
+	setcycle 67 Emotion neg
+	setcycle 67 Scene "9940_object_fear.jpg"
+	setcycle 67 Object "branch02.jpg"
+	setcycle 67 Trial_ID 58
+	setcycle 68 Emotion neu
+	setcycle 68 Scene "neutral_582.jpg"
+	setcycle 68 Object "hinge.jpg"
+	setcycle 68 Trial_ID 59
+	setcycle 69 Emotion neu
+	setcycle 69 Scene "neutral_331.jpg"
+	setcycle 69 Object "radio02.jpg"
+	setcycle 69 Trial_ID 60
+	setcycle 70 Emotion neu
+	setcycle 70 Scene "neutral_293.jpg"
+	setcycle 70 Object "belt02a.jpg"
+	setcycle 70 Trial_ID 61
+	setcycle 71 Emotion neg
+	setcycle 71 Scene "Faces_368_hsaddisgust.jpg"
+	setcycle 71 Object "seashell.jpg"
+	setcycle 71 Trial_ID 62
+	setcycle 72 Emotion neg
+	setcycle 72 Scene "2811_object_fear.jpg"
+	setcycle 72 Object "measuringcup01.jpg"
+	setcycle 72 Trial_ID 63
+	setcycle 73 Emotion neu
+	setcycle 73 Scene "neutral_310.jpg"
+	setcycle 73 Object "playingcard04.jpg"
+	setcycle 73 Trial_ID 64
+	setcycle 74 Emotion neg
+	setcycle 74 Scene "6520_people_fear.jpg"
+	setcycle 74 Object "calculator01.jpg"
+	setcycle 74 Trial_ID 65
+	setcycle 75 Emotion neu
+	setcycle 75 Scene "neutral_380.jpg"
+	setcycle 75 Object "watch02a.jpg"
+	setcycle 75 Trial_ID 66
+	setcycle 76 Emotion neg
+	setcycle 76 Scene "People_001_hsadterror.jpg"
+	setcycle 76 Object "stapler03a.jpg"
+	setcycle 76 Trial_ID 67
+	setcycle 77 Emotion neu
+	setcycle 77 Scene "neutral_550.jpg"
+	setcycle 77 Object "magnifyingglass01b.jpg"
+	setcycle 77 Trial_ID 68
+	setcycle 78 Emotion neg
+	setcycle 78 Scene "9433_people-disgust.jpg"
+	setcycle 78 Object "pictureframe04.jpg"
+	setcycle 78 Trial_ID 69
+	setcycle 79 Emotion neu
+	setcycle 79 Scene "neutral_512.jpg"
+	setcycle 79 Object "binder03b.jpg"
+	setcycle 79 Trial_ID 70
+	setcycle 80 Emotion neu
+	setcycle 80 Scene "neutral_134.jpg"
+	setcycle 80 Object "bottlecap.jpg"
+	setcycle 80 Trial_ID 71
+	setcycle 81 Emotion neg
+	setcycle 81 Scene "9183_animal_disgustandsad.jpg"
+	setcycle 81 Object "flashlight02b.jpg"
+	setcycle 81 Trial_ID 72
+	setcycle 82 Emotion filler
+	setcycle 82 Scene "People_121_hsad.jpg"
+	setcycle 82 Object "CD.jpg"
+	setcycle 82 Trial_ID filler
+	setcycle 83 Emotion filler
+	setcycle 83 Scene "neutral_169.jpg"
+	setcycle 83 Object "button01.jpg"
+	setcycle 83 Trial_ID filler
+	constrain Emotion maxrep=3
+	constrain Trial_ID mindist=2
+	run evaluation1_trialsequence
+
+define sequence evaluation1_blocksequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run evaluation1_blockloop always
+
+define sketchpad evaluation1_end
+	set start_response_interval no
+	set duration keypress
+	set description "A sketchpad notifying the participant that the experiment is finished"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=4 y=-5 z_index=0
+
+define sequence evaluation1_trialsequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run scene always
+	run SAM_evaluation1_loop always
+	run fixcross_evaluation1 always
+	run logger always
+
+define inline_script fixation
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	var.fixationdimension = 60
+	var.fixationwidth = 4
+	
+	var.start_x_fixationline = -(var.fixationdimension/2)
+	var.end_x_fixationline = (var.fixationdimension/2)
+	
+	var.start_y_fixationline = -(var.fixationdimension/2)
+	var.end_y_fixationline = (var.fixationdimension/2)
+	__end__
+
+define sketchpad fixcross_evaluation1
+	set duration 500
+	set description "Displays stimuli"
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1="[start_x_fixationline]" x2="[end_x_fixationline]" y1=0 y2=0 z_index=0
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1=0 x2=0 y1="[start_y_fixationline]" y2="[end_y_fixationline]" z_index=0
+
+define sketchpad get_ready
+	set duration keypress
+	set description "Präsentiert Stimuli"
+	draw textline center=1 color=black font_bold=no font_family=arabic font_italic=no font_size=20 html=yes show_if=always text="" x=0 y=-224 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Sind Sie bereit anzufangen?" x=0 y=-18 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="(Bitte melden Sie sich beim Versuchsleiter, <br />wenn Sie noch weitere Fragen haben.)" x=0 y=71 z_index=0
+
+define inline_script init_correct
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	# Starting values number correct neutral and negative
+	var.n_correct_neutral = 0
+	var.n_correct_neg = 0
+	
+	print("correct counters are initiated")
+	__end__
+
+define inline_script init_number_of_runs
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	# Starting values for the number of attempts (runs)
+	var.n_runs = 0
+	__end__
+
+define sketchpad instruct1
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Dieses Experiment befasst sich mit den Gehirnmechanismen, die der Aufmerksamkeit zugrunde liegen. Aufmerksamkeit bezieht sich auf die Fähigkeit, sich auf bestimmte Sachen intensiv zu konzentrieren, während man andere, ablenkende Dinge ignoriert. Menschen sind sehr unterschiedlich begabt darin, Ablenkungen zu ignorieren. Die Untersuchung der kognitiven und Hirnmechanismen, die diesen Variationen zugrunde liegen, kann uns helfen zu verstehen, wie Aufmerksamkeitsprobleme verringert werden können.<br /><br />In diesem Experiment wird es Ihre Aufgabe sein, ablenkende Dinge zu ignorieren und wir werden beurteilen, wie effektiv Sie dabei sind. Ich werde Ihnen während der einzelnen Phasen die verschiedenen Aufgaben noch genauer erklären. " x=-480 y=-192 z_index=0
+
+define sketchpad instruct2
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="In diesem Experiment werden wir mittels funktioneller Magnetresonanztomographie (fMRI) die Gehirnaktivität messen, während Sie die Hauptaufgabe bearbeiten.<br /><br />Da die Durchführung von Experimenten mit FMRI unglaublich teuer und aufwändig ist, ist es für unsere Forschung EXTREM wichtig, dass unsere Probanden die Anweisungen sehr sorgfältig und exakt so befolgen, wie wir es vorgeben. Sonst erhalten wir nicht die Informationen, die wir <br />brauchen, und es wird eine erhebliche Menge an Zeit und Geld verschwendet. Ist das verständlich? Bitte unterbrechen Sie mich und stellen Sie daher jederzeit Fragen, wenn eine der Anweisungen <br />nicht klar ist. Wollen wir dann mit dem heutigen Experiment beginnen?  Um es noch einmal zu wiederholen: Sie können mich jederzeit unterbrechen! :-)" x=-480 y=-192 z_index=0
+
+define sketchpad instruct3
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Dies ist die erste Phase des Experiments.<br /><br />Unsere Studie untersucht Emotionen und wie diese von Aufmerksamkeit beeinflusst werden. Deswegen versuchen wir, Ihre Emotionen zu messen. Eine Möglichkeit dies zu tun, besteht <br />natürlich darin Sie zu fragen, wie Sie sich bei etwas fühlen. Deswegen werden wir dies heute tun.<br /><br />Wenn wir Emotionen messen, gibt es zwei unabhängige Komponenten. Die eine ist die Valenz der Emotion - also wie positiv oder negativ die Emotion ist. Die andere Komponente ist der Grad der Erregung, den die Emotion hervorruft, d.h. wie ruhig oder aufgeregt/aufgewühlt man sich <br />durch die Emotion fühlt. In der heutigen Studie werden wir versuchen, diese beiden <br />Komponenten von Emotionen zu erfassen.<br /><br />Wir zeigen Ihnen nun verschiedene Szenen. Jede Szene wird für 3 Sekunden auf dem Bildschirm angezeigt. Bitte betrachten Sie jede Szene ganzheitlich. Denken Sie daran, jeder Szene die nötige Aufmerksamkeit zu schenken und Ihre Augen nicht abzuwenden oder zu schließen. Manchmal <br />kann der Inhalt der Szene dazu führen, dass Sie wegschauen möchten. Bitte tun Sie das nicht.<br />" x=-480 y=-288 z_index=0
+
+define sketchpad instruct4
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Nach 3 Sekunden wird die angezeigte Szene verkleinert und die folgende Skala erscheint unter der Szene auf dem Bildschirm:<br /><br />" x=-480 y=-256 z_index=0
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="1 bedeutet, dass Sie das Bild als extrem negativ/unangenehm/traurig/angsteinflößend/<br />abscheulich empfinden. 9 bedeutet, dass Sie das Bild als extrem positiv/glücklich/angenehm empfinden. 5 ist neutral, was bedeutet, dass Sie das Bild weder als besonders negativ oder positiv wahrnehmen. Klicken Sie mit der Maus auf den gewünschten Wert, um ihre Bewertung abzugeben. " x=-480 y=128 z_index=0
+	draw image center=0 file="SAMval1_new.png" scale=0.5 show_if=always x=-489 y=-94 z_index=0
+	draw image center=0 file="SAMval2_new.png" scale=0.27 show_if=always x=-358 y=-66 z_index=0
+	draw image center=0 file="SAMval3_new.png" scale=0.5 show_if=always x=-277 y=-96 z_index=0
+	draw image center=0 file="SAMval4_new.png" scale=0.27 show_if=always x=-144 y=-64 z_index=0
+	draw image center=0 file="SAMval5_new.png" scale=0.5 show_if=always x=-64 y=-96 z_index=0
+	draw image center=0 file="SAMval6_new.png" scale=0.27 show_if=always x=71 y=-65 z_index=0
+	draw image center=0 file="SAMval7_new.png" scale=0.5 show_if=always x=151 y=-97 z_index=0
+	draw image center=0 file="SAMarous8_new.png" scale=0.27 show_if=always x=285 y=-66 z_index=0
+	draw image center=0 file="SAMarous9_new.png" scale=0.5 show_if=always x=366 y=-96 z_index=0
+
+define sketchpad instruct5
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Im Anschluss verschwindet die Skala und eine neue Skala erscheint an ihrer Stelle. ZEIGE DIE SAM AROUSAL " x=-480 y=-250 z_index=0
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="SKALA. 1 bedeutet, dass das Bild Sie extrem beruhigt, während 9 bedeutet, dass das Bild Sie <br />extrem aufwühlt oder emotional erregt. Die Wertung 5 ist neutral und bedeutet, dass das Bild Sie <br />nur etwas emotional erregt. Klicken Sie mit der Maus auf den gewünschten Wert, um ihre <br />Bewertung abzugeben." x=-480 y=128 z_index=0
+	draw image center=0 file="SAMarous2_new.png" scale=0.27 show_if=always x=-359 y=-64 z_index=0
+	draw image center=0 file="SAMarous3_new.png" scale=0.5 show_if=always x=-279 y=-93 z_index=0
+	draw image center=0 file="SAMarous4_new.png" scale=0.27 show_if=always x=-146 y=-60 z_index=0
+	draw image center=0 file="SAMarous5_new.png" scale=0.5 show_if=always x=-64 y=-95 z_index=0
+	draw image center=0 file="SAMarous6_new.png" scale=0.27 show_if=always x=67 y=-60 z_index=0
+	draw image center=0 file="SAMarous7_new.png" scale=0.5 show_if=always x=149 y=-94 z_index=0
+	draw image center=0 file="SAMarous8_new.png" scale=0.27 show_if=always x=281 y=-62 z_index=0
+	draw image center=0 file="SAMarous9_new.png" scale=0.5 show_if=always x=361 y=-94 z_index=0
+	draw image center=0 file="SAMarous1_new.png" scale=0.5 show_if=always x=-491 y=-92 z_index=0
+
+define sketchpad instruct6
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Diese beiden Skalen sind unabhängig voneinander, d.h. dass angenehme Bilder entweder <br />beruhigend oder aufregend/emotional erregend sein können, während unangenehme Bilder entweder als stumpf oder aufregend/emotional erregend wahrgenommen werden.<br /><br />Haben Sie Fragen? Bitte geben Sie Ihre Bewertungen ab, ohne lange nachzudenken, und zwar nur anhand des Gefühls, welches die Szene bei Ihnen in diesem Moment auslöst. Für jede Bewertung haben Sie bis zu 10 Sekunden Zeit, aber am besten machen sie es so schnell wie möglich, ohne <br />viel darüber nachzudenken." x=-480 y=-128 z_index=0
+
+define loop learning_blockloop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 84
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Emotion neg
+	setcycle 0 Scene "Animals_047_hdisgust.jpg"
+	setcycle 0 Object "sunglasses01.jpg"
+	setcycle 0 Trial_ID filler
+	setcycle 1 Emotion neu
+	setcycle 1 Scene "neutral_053.jpg"
+	setcycle 1 Object "pingpongracket.jpg"
+	setcycle 1 Trial_ID filler
+	setcycle 2 Emotion neg
+	setcycle 2 Scene "Animals_007_h_disgustfear.jpg"
+	setcycle 2 Object "comb02a.jpg"
+	setcycle 2 Trial_ID 1
+	setcycle 3 Emotion neu
+	setcycle 3 Scene "neutral_222.jpg"
+	setcycle 3 Object "feather03a.jpg"
+	setcycle 3 Trial_ID 2
+	setcycle 4 Emotion neg
+	setcycle 4 Scene "Objects_328_hdisgust.jpg"
+	setcycle 4 Object "boot02b.jpg"
+	setcycle 4 Trial_ID 3
+	setcycle 5 Emotion neu
+	setcycle 5 Scene "neutral_227.jpg"
+	setcycle 5 Object "chessboard.jpg"
+	setcycle 5 Trial_ID 4
+	setcycle 6 Emotion neu
+	setcycle 6 Scene "neutral_022.jpg"
+	setcycle 6 Object "pencilsharpener02a.jpg"
+	setcycle 6 Trial_ID 5
+	setcycle 7 Emotion neg
+	setcycle 7 Scene "2900.1_people_crying.jpg"
+	setcycle 7 Object "box01.jpg"
+	setcycle 7 Trial_ID 6
+	setcycle 8 Emotion neg
+	setcycle 8 Scene "9050_people_accident.jpg"
+	setcycle 8 Object "dice05a.jpg"
+	setcycle 8 Trial_ID 7
+	setcycle 9 Emotion neg
+	setcycle 9 Scene "Faces_363_vsad.jpg"
+	setcycle 9 Object "measuringtape01.jpg"
+	setcycle 9 Trial_ID 8
+	setcycle 10 Emotion neu
+	setcycle 10 Scene "neutral_580.jpg"
+	setcycle 10 Object "candle08b.jpg"
+	setcycle 10 Trial_ID 9
+	setcycle 11 Emotion neg
+	setcycle 11 Scene "1304._animal_fear.jpg"
+	setcycle 11 Object "crayon.jpg"
+	setcycle 11 Trial_ID 10
+	setcycle 12 Emotion neu
+	setcycle 12 Scene "neutral_195.jpg"
+	setcycle 12 Object "cup01.jpg"
+	setcycle 12 Trial_ID 11
+	setcycle 13 Emotion neu
+	setcycle 13 Scene "neutral_017.jpg"
+	setcycle 13 Object "hat03b.jpg"
+	setcycle 13 Trial_ID 12
+	setcycle 14 Emotion neg
+	setcycle 14 Scene "Objects_006_hdisgust.jpg"
+	setcycle 14 Object "towel02a.jpg"
+	setcycle 14 Trial_ID 13
+	setcycle 15 Emotion neu
+	setcycle 15 Scene "neutral_100.jpg"
+	setcycle 15 Object "drum.jpg"
+	setcycle 15 Trial_ID 14
+	setcycle 16 Emotion neg
+	setcycle 16 Scene "9412_people_sad.jpg"
+	setcycle 16 Object "book01b.jpg"
+	setcycle 16 Trial_ID 15
+	setcycle 17 Emotion neu
+	setcycle 17 Scene "neutral_144.jpg"
+	setcycle 17 Object "chair.jpg"
+	setcycle 17 Trial_ID 16
+	setcycle 18 Emotion neu
+	setcycle 18 Scene "neutral_066.jpg"
+	setcycle 18 Object "fryingpan02a.jpg"
+	setcycle 18 Trial_ID filler
+	setcycle 19 Emotion neu
+	setcycle 19 Scene "neutral_246.jpg"
+	setcycle 19 Object "stackingrings01a.jpg"
+	setcycle 19 Trial_ID 17
+	setcycle 20 Emotion neg
+	setcycle 20 Scene "People_033_hsad.jpg"
+	setcycle 20 Object "cane.jpg"
+	setcycle 20 Trial_ID 18
+	setcycle 21 Emotion neu
+	setcycle 21 Scene "neutral_007.jpg"
+	setcycle 21 Object "shirt01.jpg"
+	setcycle 21 Trial_ID 19
+	setcycle 22 Emotion neg
+	setcycle 22 Scene "6550_people_fear.jpg"
+	setcycle 22 Object "plasticflower01a.jpg"
+	setcycle 22 Trial_ID 20
+	setcycle 23 Emotion neg
+	setcycle 23 Scene "Animals_087_h.jpg"
+	setcycle 23 Object "scale01.jpg"
+	setcycle 23 Trial_ID filler
+	setcycle 24 Emotion neu
+	setcycle 24 Scene "neutral_098.jpg"
+	setcycle 24 Object "tuque03b.jpg"
+	setcycle 24 Trial_ID 21
+	setcycle 25 Emotion neg
+	setcycle 25 Scene "Animals_041_hfeardisgust.jpg"
+	setcycle 25 Object "hourglass.jpg"
+	setcycle 25 Trial_ID 22
+	setcycle 26 Emotion neg
+	setcycle 26 Scene "People_140_hsad.jpg"
+	setcycle 26 Object "wallet04.jpg"
+	setcycle 26 Trial_ID 23
+	setcycle 27 Emotion neu
+	setcycle 27 Scene "neutral_058.jpg"
+	setcycle 27 Object "handfan01b.jpg"
+	setcycle 27 Trial_ID 24
+	setcycle 28 Emotion neu
+	setcycle 28 Scene "neutral_128.jpg"
+	setcycle 28 Object "bow04.jpg"
+	setcycle 28 Trial_ID 25
+	setcycle 29 Emotion neg
+	setcycle 29 Scene "9414_people_fighting.jpg"
+	setcycle 29 Object "teabag.jpg"
+	setcycle 29 Trial_ID 26
+	setcycle 30 Emotion neu
+	setcycle 30 Scene "neutral_192.jpg"
+	setcycle 30 Object "negativefilm.jpg"
+	setcycle 30 Trial_ID 27
+	setcycle 31 Emotion neu
+	setcycle 31 Scene "neutral_024.jpg"
+	setcycle 31 Object "clothespin03b.jpg"
+	setcycle 31 Trial_ID 28
+	setcycle 32 Emotion neg
+	setcycle 32 Scene "People_127_fearh.jpg"
+	setcycle 32 Object "makeupbrush04.jpg"
+	setcycle 32 Trial_ID 29
+	setcycle 33 Emotion neg
+	setcycle 33 Scene "Objects_283_hsad.jpg"
+	setcycle 33 Object " microscope.jpg"
+	setcycle 33 Trial_ID filler
+	setcycle 34 Emotion neg
+	setcycle 34 Scene "9440_object_disgustandfear.jpg"
+	setcycle 34 Object "glassmop.jpg"
+	setcycle 34 Trial_ID 30
+	setcycle 35 Emotion neg
+	setcycle 35 Scene "2700._people_crying_sad.jpg"
+	setcycle 35 Object "pillow02b.jpg"
+	setcycle 35 Trial_ID 31
+	setcycle 36 Emotion neu
+	setcycle 36 Scene "neutral_716.jpg"
+	setcycle 36 Object "waterbottle03.jpg"
+	setcycle 36 Trial_ID filler
+	setcycle 37 Emotion neg
+	setcycle 37 Scene "People_201_vsadterror.jpg"
+	setcycle 37 Object "globe.jpg"
+	setcycle 37 Trial_ID 32
+	setcycle 38 Emotion neu
+	setcycle 38 Scene "neutral_374.jpg"
+	setcycle 38 Object "rubberglove02b.jpg"
+	setcycle 38 Trial_ID 33
+	setcycle 39 Emotion neg
+	setcycle 39 Scene "9290_object_disgsut.jpg"
+	setcycle 39 Object "clipboard.jpg"
+	setcycle 39 Trial_ID 34
+	setcycle 40 Emotion neu
+	setcycle 40 Scene "neutral_065.jpg"
+	setcycle 40 Object "pylon.jpg"
+	setcycle 40 Trial_ID 35
+	setcycle 41 Emotion neu
+	setcycle 41 Scene "neutral_390.jpg"
+	setcycle 41 Object "toothbrush03b.jpg"
+	setcycle 41 Trial_ID 36
+	setcycle 42 Emotion neu
+	setcycle 42 Scene "neutral_509.jpg"
+	setcycle 42 Object "battery02b.jpg"
+	setcycle 42 Trial_ID 37
+	setcycle 43 Emotion neg
+	setcycle 43 Scene "People_225_hdisgustsad.jpg"
+	setcycle 43 Object "envelope03a.jpg"
+	setcycle 43 Trial_ID 38
+	setcycle 44 Emotion neu
+	setcycle 44 Scene "neutral_226.jpg"
+	setcycle 44 Object "ring01.jpg"
+	setcycle 44 Trial_ID 39
+	setcycle 45 Emotion neu
+	setcycle 45 Scene "neutral_050.jpg"
+	setcycle 45 Object "medal02b.jpg"
+	setcycle 45 Trial_ID 40
+	setcycle 46 Emotion neg
+	setcycle 46 Scene "8480_people_fear.jpg"
+	setcycle 46 Object "safetypin.jpg"
+	setcycle 46 Trial_ID 41
+	setcycle 47 Emotion neg
+	setcycle 47 Scene "Animals_020_h_fear.jpg"
+	setcycle 47 Object "lightbulb01.jpg"
+	setcycle 47 Trial_ID filler
+	setcycle 48 Emotion neg
+	setcycle 48 Scene "1201_animal_fearanddisgust.jpg"
+	setcycle 48 Object "ruler05.jpg"
+	setcycle 48 Trial_ID 42
+	setcycle 49 Emotion neu
+	setcycle 49 Scene "neutral_659.jpg"
+	setcycle 49 Object "lock03a.jpg"
+	setcycle 49 Trial_ID 43
+	setcycle 50 Emotion neg
+	setcycle 50 Scene "Objects_021_vdisgust.jpg"
+	setcycle 50 Object "thimble.jpg"
+	setcycle 50 Trial_ID 44
+	setcycle 51 Emotion neu
+	setcycle 51 Scene "neutral_107.jpg"
+	setcycle 51 Object "baseball01a.jpg"
+	setcycle 51 Trial_ID 45
+	setcycle 52 Emotion neu
+	setcycle 52 Scene "neutral_421.jpg"
+	setcycle 52 Object "paintroller01.jpg"
+	setcycle 52 Trial_ID filler
+	setcycle 53 Emotion neg
+	setcycle 53 Scene "9421_people_sad.jpg"
+	setcycle 53 Object "protractor.jpg"
+	setcycle 53 Trial_ID 46
+	setcycle 54 Emotion neu
+	setcycle 54 Scene "neutral_614.jpg"
+	setcycle 54 Object "birdie.jpg"
+	setcycle 54 Trial_ID 47
+	setcycle 55 Emotion neg
+	setcycle 55 Scene "People_077_vfear.jpg"
+	setcycle 55 Object "hanger02a.jpg"
+	setcycle 55 Trial_ID 48
+	setcycle 56 Emotion neu
+	setcycle 56 Scene "neutral_247.jpg"
+	setcycle 56 Object "lifejacket.jpg"
+	setcycle 56 Trial_ID 49
+	setcycle 57 Emotion neg
+	setcycle 57 Scene "2703_people_cryingsad.jpg"
+	setcycle 57 Object "bag.jpg"
+	setcycle 57 Trial_ID 50
+	setcycle 58 Emotion neu
+	setcycle 58 Scene "neutral_706.jpg"
+	setcycle 58 Object "fan.jpg"
+	setcycle 58 Trial_ID 51
+	setcycle 59 Emotion neu
+	setcycle 59 Scene "neutral_064.jpg"
+	setcycle 59 Object "tape02a.jpg"
+	setcycle 59 Trial_ID 52
+	setcycle 60 Emotion neg
+	setcycle 60 Scene "Animals_221_hdisgustfear.jpg"
+	setcycle 60 Object "binoculars01b.jpg"
+	setcycle 60 Trial_ID 53
+	setcycle 61 Emotion neu
+	setcycle 61 Scene "neutral_197.jpg"
+	setcycle 61 Object "match.jpg"
+	setcycle 61 Trial_ID fillrt
+	setcycle 62 Emotion neg
+	setcycle 62 Scene "Animals_008_v_disgust.jpg"
+	setcycle 62 Object "spoon01.jpg"
+	setcycle 62 Trial_ID 54
+	setcycle 63 Emotion neg
+	setcycle 63 Scene "2981_animal_disgust.jpg"
+	setcycle 63 Object "mirror.jpg"
+	setcycle 63 Trial_ID 55
+	setcycle 64 Emotion neg
+	setcycle 64 Scene "Objects_106_vdisgust.jpg"
+	setcycle 64 Object "brick.jpg"
+	setcycle 64 Trial_ID filler
+	setcycle 65 Emotion neg
+	setcycle 65 Scene "1033_animal_fearanddisgust.jpg"
+	setcycle 65 Object "key01.jpg"
+	setcycle 65 Trial_ID 56
+	setcycle 66 Emotion neu
+	setcycle 66 Scene "neutral_409.jpg"
+	setcycle 66 Object "violin.jpg"
+	setcycle 66 Trial_ID 57
+	setcycle 67 Emotion neg
+	setcycle 67 Scene "9940_object_fear.jpg"
+	setcycle 67 Object "branch02.jpg"
+	setcycle 67 Trial_ID 58
+	setcycle 68 Emotion neu
+	setcycle 68 Scene "neutral_582.jpg"
+	setcycle 68 Object "hinge.jpg"
+	setcycle 68 Trial_ID 59
+	setcycle 69 Emotion neu
+	setcycle 69 Scene "neutral_331.jpg"
+	setcycle 69 Object "radio02.jpg"
+	setcycle 69 Trial_ID 60
+	setcycle 70 Emotion neu
+	setcycle 70 Scene "neutral_293.jpg"
+	setcycle 70 Object "belt02a.jpg"
+	setcycle 70 Trial_ID 61
+	setcycle 71 Emotion neg
+	setcycle 71 Scene "Faces_368_hsaddisgust.jpg"
+	setcycle 71 Object "seashell.jpg"
+	setcycle 71 Trial_ID 62
+	setcycle 72 Emotion neg
+	setcycle 72 Scene "2811_object_fear.jpg"
+	setcycle 72 Object "measuringcup01.jpg"
+	setcycle 72 Trial_ID 63
+	setcycle 73 Emotion neu
+	setcycle 73 Scene "neutral_310.jpg"
+	setcycle 73 Object "playingcard04.jpg"
+	setcycle 73 Trial_ID 64
+	setcycle 74 Emotion neg
+	setcycle 74 Scene "6520_people_fear.jpg"
+	setcycle 74 Object "calculator01.jpg"
+	setcycle 74 Trial_ID 65
+	setcycle 75 Emotion neu
+	setcycle 75 Scene "neutral_380.jpg"
+	setcycle 75 Object "watch02a.jpg"
+	setcycle 75 Trial_ID 66
+	setcycle 76 Emotion neg
+	setcycle 76 Scene "People_001_hsadterror.jpg"
+	setcycle 76 Object "stapler03a.jpg"
+	setcycle 76 Trial_ID 67
+	setcycle 77 Emotion neu
+	setcycle 77 Scene "neutral_550.jpg"
+	setcycle 77 Object "magnifyingglass01b.jpg"
+	setcycle 77 Trial_ID 68
+	setcycle 78 Emotion neg
+	setcycle 78 Scene "9433_people-disgust.jpg"
+	setcycle 78 Object "pictureframe04.jpg"
+	setcycle 78 Trial_ID 69
+	setcycle 79 Emotion neu
+	setcycle 79 Scene "neutral_512.jpg"
+	setcycle 79 Object "binder03b.jpg"
+	setcycle 79 Trial_ID 70
+	setcycle 80 Emotion neu
+	setcycle 80 Scene "neutral_134.jpg"
+	setcycle 80 Object "bottlecap.jpg"
+	setcycle 80 Trial_ID 71
+	setcycle 81 Emotion neg
+	setcycle 81 Scene "9183_animal_disgustandsad.jpg"
+	setcycle 81 Object "flashlight02b.jpg"
+	setcycle 81 Trial_ID 72
+	setcycle 82 Emotion filler
+	setcycle 82 Scene "People_121_hsad.jpg"
+	setcycle 82 Object "CD.jpg"
+	setcycle 82 Trial_ID filler
+	setcycle 83 Emotion filler
+	setcycle 83 Scene "neutral_169.jpg"
+	setcycle 83 Object "button01.jpg"
+	setcycle 83 Trial_ID filler
+	constrain Emotion maxrep=3
+	constrain Trial_ID mindist=2
+	run learning_sequence
+
+define sketchpad learning_end
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=0 y=0 z_index=0
+
+define sketchpad learning_fixation
+	set duration 1000
+	set description "Displays stimuli"
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1="[start_x_fixationline]" x2="[end_x_fixationline]" y1=0 y2=0 z_index=0
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1=0 x2=0 y1="[start_y_fixationline]" y2="[end_y_fixationline]" z_index=0
+
+define sketchpad learning_instruct
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Sie haben die erste Phase erfolgreich abgeschlossen. Die nächsten Phasen werden kürzer sein! <br /><br />In dieser zweiten Phase geht es um Aufmerksamkeit. Es werden Ihnen 6 Sekunden lang gepaarte Objekte und Szenen gezeigt. Bei den Szenen handelt es sich um die gleichen Szenen, die Sie in der vorherigen Phase gesehen haben. Bei den Objekten handelt es sich um bekannte und alltägliche Gegenstände.<br /><br />Ihre Aufgabe in dieser Phase ist es, den Paaren Ihre ganze Aufmerksamkeit zu schenken und sie genau zu beobachten. Nutzen Sie die vollen 6 Sekunden, die Ihnen zur Verfügung stehen, um sich die Paare richtig einzuprägen; möglicherweise wird Ihr Wissen über die Paare bald getestet.<br /><br />Haben Sie noch Fragen?<br />" x=-480 y=-224 z_index=0
+
+define sketchpad learning_pair
+	set duration 6000
+	set description "Displays stimuli"
+	draw image center=1 file="[Object]" scale="[scale_object_learning]" show_if=always x=0 y=-256 z_index=0
+	draw image center=1 file="[Scene]" scale="[scale_scene_learning]" show_if=always x=0 y=192 z_index=0
+
+define sequence learning_sequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run learning_fixation always
+	run learning_pair always
+	run logger always
+
+define logger logger
+	set description "Logs experimental data"
+	set auto_log yes
+
+define form_base new_form_base
+	set timeout infinite
+	set spacing 10
+	set rows "2;2"
+	set only_render no
+	set margins "50;50;50;50"
+	set description "A generic form plug-in"
+	set cols "2;2"
+	set _theme gray
+
+
+define inline_script new_inline_script
+	set description "Executes Python code"
+	set _run ""
+	set _prepare ""
+
+define repeat_cycle new_repeat_cycle
+	set description "Optionally repeat a cycle from a loop"
+	set condition "[sam_clicked] = no"
+
+define repeat_cycle new_repeat_cycle_criterion
+	set description "Optionally repeat a cycle from a loop"
+	set condition "[repeat_variable] = yes"
+
+define loop practice1
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 practice_phase 1
+	run practice_blocksequence
+
+define sketchpad practice1_instruct1
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Jetzt haben Sie die Paare wirklich gut gelernt!<br /> <br />Dieser nächste Abschnitt wird etwas anders. Denn wir kommen nun zur entscheidenden Aufgabe, <br />um IHRE Fähigkeit zu messen, aufmerksam zu sein und Ablenkungen zu ignorieren. Bitte achten <br />Sie aufmerksam auf die Anweisungen, während ich sie vorlese und versuchen Sie, die Aufgabe <br />genau so auszuführen, wie ich sie beschreibe.<br /><br />In dieser Phase des Experiments zeigen wir Ihnen wieder die gleichen Hinweisobjekte. Wir werden jedoch Ihre Aufgabe ändern: Einige der Hinweisobjekte, die Sie sehen werden, erscheinen nun in einem GRÜNEN Rahmen. Bei diesen Hinweisobjekten besteht Ihre Aufgabe darin, so schnell wie möglich an die richtige Antwortszene zu denken, so wie Sie es bisher getan haben. In dieser <br />Phase möchten wir jedoch nicht, dass Sie durch das Klicken der Maus auf etwas reagieren. Stattdessen möchten wir lediglich, dass Sie an die Antwortszene DENKEN und sie es die ganze <br />Zeit, in der das Hinweisobjekt auf dem Bildschirm ist, im Kopf behalten. " x=-480 y=-256 z_index=0
+
+define sketchpad practice1_instruct2
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Obwohl es verlockend sein könnte einfach vom Bildschirm wegzuschauen, oder das ROT gerahmte Hinweisobjekt nicht anzuschauen, ist es für unser Experiment entscheidend, dass Sie jedem ROT eingerahmten Hinweisobjekt Ihre volle Aufmerksamkeit schenken und es so lange anschauen, <br />bis es vom Bildschirm verschwindet. Es ist aber auch zwingend erforderlich, dass Sie verhindern, dass Ihnen die Antwortszene überhaupt in den Sinn kommt, während Sie auf die ROT <br />eingerahmten Hinweisobjekte schauen. Auch wenn es anfangs schwierig sein mag, versuchen Sie bitte Ihr Bestes um überhaupt nicht an die Antwortszene zu denken - nicht einmal für eine <br />Sekunde und auch nicht, nachdem das Hinweisobjekt vom Bildschirm verschwunden ist.<br /><br />Ihr Ziel sollte es sein, niemals an die Antwortszene zu denken die zu den ROT eingerahmten Hinweisobjekte gehören. Sollte Ihnen die Antwortszene doch einmal automatisch in den Sinn kommen, stoßen (ausblenden, verdrängen) Sie sie bitte aktiv aus Ihrem Kopf und bemühen sie <br />sich, wirklich nicht mehr daran zu denken. Sie sollten dies erreichen können, indem Sie versuchen, das Denken an die Antwortszene zu blockieren, aber NICHT, indem Sie es durch andere Gedanken, wie einen anderen Gegenstand, ein Bild oder eine Idee, ersetzen. " x=-480 y=-288 z_index=0
+
+define sketchpad practice1_instruct3
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Um es noch einmal zu wiederholen: Denken Sie an nichts anderes, während Sie die Antwortszene aktiv ausblenden. Richten Sie stattdessen Ihre volle Aufmerksamkeit während der gesamten Zeit <br />auf das Hinweisobjekt. Bitte beachten Sie, dass es ein paar oder sogar viele Versuche erfordern <br />kann zu Lernen, nicht an die Antwortszenen zu denken. Wichtig ist, dass Sie einfach dranbleiben, <br />bis Sie die Aufgabe vollständig gemeistert haben. Wir werden nun mit einer kurzen Übungsphase beginnen.<br /><br />Haben Sie weitere Fragen? Möchten Sie die Anleitung noch einmal lesen, bevor wir beginnen?" x=-480 y=-160 z_index=0
+
+define loop practice2
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 practice_phase 2
+	run practice_blocksequence
+
+define loop practice_blockloop
+	set source_file ""
+	set source table
+	set repeat 1
+	set order random
+	set description "Repeatedly runs another item"
+	set cycles 6
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Emotion "neg-filler"
+	setcycle 0 Scene "Animals_020_h_fear.jpg"
+	setcycle 0 Object "lightbulb01.jpg"
+	setcycle 0 Condition nothink
+	setcycle 0 Boxcolor red
+	setcycle 1 Emotion "neu-filler"
+	setcycle 1 Scene "neutral_169.jpg"
+	setcycle 1 Object "button01.jpg"
+	setcycle 1 Condition think
+	setcycle 1 Boxcolor green
+	setcycle 2 Emotion "neu-filler"
+	setcycle 2 Scene "neutral_197.jpg"
+	setcycle 2 Object "match.jpg"
+	setcycle 2 Condition nothink
+	setcycle 2 Boxcolor red
+	setcycle 3 Emotion "neu-filler"
+	setcycle 3 Scene "neutral_421.jpg"
+	setcycle 3 Object "paintroller01.jpg"
+	setcycle 3 Condition think
+	setcycle 3 Boxcolor green
+	setcycle 4 Emotion "neg-filler"
+	setcycle 4 Scene "Objects_283_hsad.jpg"
+	setcycle 4 Object "microscope.jpg"
+	setcycle 4 Condition think
+	setcycle 4 Boxcolor green
+	setcycle 5 Emotion "neg-filler"
+	setcycle 5 Scene "People_121_hsad.jpg"
+	setcycle 5 Object "CD.jpg"
+	setcycle 5 Condition nothink
+	setcycle 5 Boxcolor red
+	run practice_trialsequence
+
+define sequence practice_blocksequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run practice_blockloop always
+	run end always
+
+define sketchpad practice_cue
+	set duration 3000
+	set description "Displays stimuli"
+	draw rect color="[Boxcolor]" fill=1 h=448 penwidth=1 show_if=always w=448 x=-224 y=-224 z_index=0
+	draw image center=1 file="[Object]" scale="[scale_object_cue]" show_if=always x=0 y=0 z_index=0
+
+define sketchpad practice_intrusionrating
+	set duration 0
+	set description "Displays stimuli"
+	draw line color=black penwidth=4 show_if=always x1=-288 x2=288 y1=0 y2=0 z_index=0
+	draw line color=black penwidth=4 show_if=always x1=-288 x2=-288 y1=0 y2=32 z_index=0
+	draw line color=black penwidth=4 show_if=always x1=288 x2=288 y1=0 y2=32 z_index=0
+	draw line color=black penwidth=4 show_if=always x1=0 x2=0 y1=0 y2=32 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Wie oft mussten Sie an die <br />Reaktionsszene denken?" x=0 y=-64 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=19 html=yes show_if=always text="Immer: B" x=288 y=64 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=19 html=yes show_if=always text="Manchmal: G" x=0 y=64 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=19 html=yes show_if=always text="Nie: R" x=-288 y=64 z_index=0
+
+define keyboard_response practice_intrusionrating_response
+	set timeout 2000
+	set flush yes
+	set event_type keypress
+	set duration keypress
+	set description "Collects keyboard responses"
+	set allowed_responses "g;b;y"
+
+define sketchpad practice_jitteredfixation
+	set duration "[TNTfixation_jitter]"
+	set description "Displays stimuli"
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1="[start_x_fixationline]" x2="[end_x_fixationline]" y1=0 y2=0 z_index=0
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1=0 x2=0 y1="[start_y_fixationline]" y2="[end_y_fixationline]" z_index=0
+
+define inline_script practice_jitteredfixationscript
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	import random # importing library 
+	TNTjitter_durations_list = [1400, 1800, 2000, 2200, 2600]
+	var.TNTfixation_jitter = random.choice(TNTjitter_durations_list)
+	print(var.TNTfixation_jitter)
+	    # 2000 ms may be removed 
+	    # May contain an exponetial distrobution
+	    # Fixed order or completley random?
+	__end__
+
+define sequence practice_trialsequence
+	set flush_keyboard yes
+	set description "Runs a number of items in sequence"
+	run practice_jitteredfixationscript always
+	run practice_jitteredfixation always
+	run practice_cue always
+	run practice_intrusionrating "[practice_phase] = 2"
+	run practice_intrusionrating_response "[practice_phase] = 2"
+	run logger always
+
+define sketchpad scene
+	set duration 3000
+	set description "Displays stimuli"
+	draw image center=1 file="[Scene]" scale=1 show_if=always x=0 y=-96 z_index=0
+
+define inline_script set_coordinates_feedback_box
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	# y coordinate of ROI box
+	var.y_box = 285
+	    
+	# x coordinates of ROI box
+	var.x_box1 = -422
+	var.x_box2 = -317
+	var.x_box3 = -210
+	var.x_box4 = -104
+	var.x_box5 = 2
+	var.x_box6 = 106
+	var.x_box7 = 211
+	var.x_box8 = 317
+	var.x_box9 = 423
+	__end__
+
+define inline_script set_repeat_variable
+	set description "Executes Python code"
+	___run__
+	
+	if "roi" in var.cursor_roi:
+	    var.repeat_variable = "no"
+	else:
+	    var.repeat_variable = "yes"
+	__end__
+	set _prepare ""
+
+define inline_script set_scaling_factors
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	var.scale_scene_SAM_eval = 0.7
+	var.scale_scene_MC = 0.25
+	var.scale_scene_refresher = 0.4
+	var.scale_scene_learning = 0.5
+	
+	var.scale_object_learning = 0.2
+	var.scale_object_criterion = 0.2
+	var.scale_object_refesher = 0.2
+	var.scale_object_cue = 0.2
+	__end__
+
+define inline_script shuffle_TNT_testfeedback_lab_blockloop
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	from datamatrix import operations as ops
+	
+	# CONSTRAINTS:
+	# - Distractors should be different from the target - DONE
+	# - Distractors should be from the same category
+	# - No more than 3 from same condition in a row
+	# - First and last 2 should be fillers
+	
+	
+	# Get the loop table from the block_loop. This is the original table
+	# as you see it in OpenSesame, before shuffling etc.
+	dm = items['TNT_testfeedback_lab_blockloop'].dm
+	# While any of the three columns match, keep looping ...
+	while any(
+	    row.distractor_scene_1 == row.distractor_scene_2 or
+	    row.distractor_scene_1 == row.Scene or
+	    row.distractor_scene_2 == row.Scene
+	    for row in dm
+	):
+	    # Shuffle the two distractor columns. We don't need to shuffle
+	    # the target column, because its randomized in the loop item
+	    # already
+	    dm.distractor_scene_1 = ops.shuffle(dm.distractor_scene_1)
+	    dm.distractor_scene_2 = ops.shuffle(dm.distractor_scene_2)
+	    print('shuffling')
+	#print(dm)
+	__end__
+
+define sketchpad testfeeback_instruct2
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Sie haben 4 Sekunden Zeit, um sich zu entscheiden. Wenn Sie w drücken, werden Ihnen drei Antwortmöglichkeiten angezeigt. Sie müssen dann die richtige Antwortszene aus den drei <br />Optionen auswählen. Sie können Ihre Auswahl machen, indem Sie die Antwortszene mit der <br />Mause an klicken. <br /><br />Sie haben 4 Sekunden Zeit, um diese Auswahl zu treffen. Wenn Ihre Wahl falsch war, wird das <br />Wort falsch auf dem Bildschirm angezeigt. Unabhängig von Ihrer Antwort wird die richtige Szene <br />am Ende in einem blauen Rahmen angezeigt - nutzen Sie diese Anzeige, um Ihr Wissen über die Paare zu verbessern! Denken Sie daran, dass diese Phase Ihren Lernprozess unterstützen soll, <br />also nutzen Sie sie so gut es geht. <br /><br />Unabhängig davon, ob Sie beim ersten Mal Nein gewählt oder die falsche oder richtige Antwort gegeben haben – am Ende wird Ihnen die richtige Antwortszene in einem blauen Rahmen <br />angezeigt. Nutzen Sie diesen Prozess, um Ihr Wissen über die Paare zu verbessern!<br /><br />Viel Glück!<br />" x=-480 y=-288 z_index=0
+
+define loop testfeedback_blockloop
+	set source_file "block_loop_test_feedback_PP_[subject_nr].csv"
+	set source file
+	set repeat 0.05
+	set order sequential
+	set description "Repeatedly runs another item"
+	set cycles 1
+	set continuous no
+	set break_if_on_first yes
+	set break_if never
+	setcycle 0 Emotion_distractor_scene_1 ""
+	setcycle 0 new_column ""
+	run TNT_testfeedback_trialsequence
+
+define feedback testfeedback_correct_feedback
+	set reset_variables no
+	set duration 1000
+	set description "Provides feedback to the participant"
+	draw textline center=1 color=green font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Correct!" x=0 y=0 z_index=0
+
+define sketchpad testfeedback_criterion_fixation
+	set duration 500
+	set description "Displays stimuli"
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1="[start_x_fixationline]" x2="[end_x_fixationline]" y1=0 y2=0 z_index=0
+	draw line color=black penwidth="[fixationwidth]" show_if=always x1=0 x2=0 y1="[start_y_fixationline]" y2="[end_y_fixationline]" z_index=0
+
+define sketchpad testfeedback_criterion_multiplechoice
+	set duration 0
+	set description "Displays stimuli"
+	draw image center=1 file="[distractor_scene_1]" name=roi_distractor_scene_1 scale="[scale_scene_MC]" show_if=always x="[x1]" y=288 z_index=0
+	draw image center=1 file="[distractor_scene_2]" name=roi_distractor_scene_2 scale="[scale_scene_MC]" show_if=always x="[x2]" y=288 z_index=0
+	draw image center=1 file="[Scene]" name=roi_scene scale="[scale_scene_MC]" show_if=always x="[x3]" y=288 z_index=0
+	draw image center=1 file="[Object]" scale="[scale_object_criterion]" show_if=always x=0 y=-224 z_index=0
+
+define mouse_response testfeedback_criterion_multiplechoice_mouse
+	set timeout 4000
+	set show_cursor yes
+	set linked_sketchpad testfeedback_criterion_multiplechoice
+	set flush yes
+	set event_type mouseclick
+	set duration mouseclick
+	set description "Collects mouse responses"
+
+define sketchpad testfeedback_criterion_object
+	set duration 0
+	set description "Displays stimuli"
+	draw image center=1 file="[Object]" scale="[scale_object_criterion]" show_if=always x=0 y=-224 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="???" x=0 y=288 z_index=0
+
+define keyboard_response testfeedback_criterion_objectrecall
+	set timeout 4000
+	set flush yes
+	set event_type keypress
+	set duration keypress
+	set description "Collects keyboard responses"
+	set allowed_responses "w;x"
+
+define sketchpad testfeedback_end
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=1 y=-3 z_index=0
+
+define feedback testfeedback_incorrect_feedback
+	set reset_variables no
+	set duration 1000
+	set description "Provides feedback to the participant"
+	draw textline center=1 color=red font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Incorrect!" x=0 y=0 z_index=0
+
+define sketchpad testfeedback_instruct1
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=0 color=black font_bold=yes font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Toll! Jetzt wissen wir, dass das eine ganze Menge verschiedener Paare waren, die Sie lernen <br />mussten. Aber wir wissen auch, dass man etwas am besten lernt, wenn man darauf getestet wird, oder? <br /><br />Das bringt uns direkt zum nächsten Abschnitt. In dieser Phase werden wir Ihr Wissen über die <br />Paare testen. Wir werden Ihnen ein Objekt zeigen, das ich von nun an als Hinweisobjekt <br />bezeichnen werde, und Sie werden gebeten, die dazugehörige Szene aufzurufen. Diese Szene <br />werde ich von nun an Antwortszene nennen. Wenn Sie glauben, die passende Antwortszene für <br />das Hinweisobjekt zu kennen, drücken Sie 'w'. Wenn Sie sie nicht kennen, dann drücken Sie x. " x=-480 y=-160 z_index=0
+
+define sketchpad testfeedback_objectscene_refresher
+	set duration 2500
+	set description "Displays stimuli"
+	draw image center=1 file="[Object]" scale="[scale_object_refesher]" show_if=always x=0 y=-256 z_index=0
+	draw image center=1 file="[Scene]" scale="[scale_scene_refresher]" show_if=always x=0 y=192 z_index=0
+	draw rect color=blue fill=0 h=420 penwidth=3 show_if=always w=420 x=-210 y=-50 z_index=0
+
+define sketchpad waiting
+	set duration 3000
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Gleich geht es los!" x=-11 y=-6 z_index=0
+
+define sketchpad welcome
+	set duration keypress
+	set description "Displays stimuli"
+	draw textline center=1 color=black font_bold=no font_family=hindi font_italic=no font_size=30 html=yes show_if=always text="Herzlich willkommen im Experiment!" x=0 y=0 z_index=0
+	draw textline center=1 color=black font_bold=no font_family=hindi font_italic=no font_size=20 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=0 y=64 z_index=0
+
