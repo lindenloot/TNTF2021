@@ -1,0 +1,9 @@
+condition,order,null_ID,neu_ID,neg_ID,TBR_ID,TBF_ID,Scene,Object,filler,repetition,exp_ID,Emotion,Trial_ID
+TBRneuFILLER,5,121,9999,91,9999,91,neutral_261.jpg,950.jpg,yes,9999,IMDF_scanner,neu,filler
+TBRneuFILLER,5,122,9999,92,9999,92,neutral_673.jpg,952.jpg,yes,9999,IMDF_scanner,neu,filler
+TBRnegFILLER,5,123,91,9999,9999,93,1050.jpg,953.jpg,yes,9999,IMDF_scanner,neg,filler
+TBRnegFILLER,5,124,92,9999,9999,94,People_143_h.jpg,954.jpg,yes,9999,IMDF_scanner,neg,filler
+TBFneuFILLER,5,125,9999,93,91,9999,neutral_695.jpg,957.jpg,yes,9999,IMDF_scanner,neu,filler
+TBFneuFILLER,5,126,9999,94,92,9999,neutral_707.jpg,975.jpg,yes,9999,IMDF_scanner,neu,filler
+TBFnegFILLER,5,127,93,9999,93,9999,People_133_h.jpg,981.jpg,yes,9999,IMDF_scanner,neg,filler
+TBFnegFILLER,5,128,94,9999,94,9999,6213.jpg,987.jpg,yes,9999,IMDF_scanner,neg,filler
