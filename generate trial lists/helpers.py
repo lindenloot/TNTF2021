@@ -150,28 +150,35 @@ def addValenceColumn(dm):
         
     return dm
         
-def addThinkColumn(dm):
+def addThinkColumn(dm, nTrialsPerLevel=12):
     
     """
     Adds a column containing the think condition per pair
+    
+    Arguments:
+    dm
+    nTrialsPerCondition        --- default = 12
     """
     
     # NOTE: when slicing on the basis of selections,
     # a new column has to be created beforehand
     dm["think_condition"] = None
     
+    
     dmNeg = dm["Emotion"] == "neg"
     dmNeu = dm["Emotion"] == "neu"
     
-    l_think_conditions = (["NT"] * 12) + (["T"] * 12)
-    random.shuffle(l_think_conditions)
+    l_think_conditions = (["NT"] * \
+        nTrialsPerLevel) + (["T"] * nTrialsPerLevel)
 
+    # Assign to the neg trials, after shuffling    
+    random.shuffle(l_think_conditions)
     dm["think_condition"][dmNeg] = l_think_conditions
     
+    # Assign to the neg trials, after re-shuffling    
     random.shuffle(l_think_conditions)
     dm["think_condition"][dmNeu] = l_think_conditions    
-    print(dmNeg.length)
-    
+
     return dm
 
 def addRememberColumn(dm):
@@ -246,7 +253,7 @@ def addColorColumn(dm):
     # Determine exp:
     exp = dm["exp_ID"][0]
     
-    if exp == "TNT_scanner":
+    if "TNT" in exp:
         dm_think = dm["think_condition"] == "T"
         dm_nothink = dm["think_condition"] == "NT"
         
