@@ -1,6 +1,6 @@
 ---
 API: 2.1
-OpenSesame: 3.3.9a4
+OpenSesame: 3.3.9b1
 Platform: posix
 ---
 set width 1024
@@ -26,7 +26,7 @@ set font_size 20
 set font_italic no
 set font_family mono
 set font_bold no
-set experiment_path "/home/lotje/Documents/Research, teaching and programming/OpenSesame/Scripts/Others/Claudius Schroeder/experimental files"
+set experiment_path "/home/lotje/Documents/Research, teaching and programming/OpenSesame/Scripts/Others/Claudius Schroeder/TNTF2021/experimental files"
 set disable_garbage_collection yes
 set description "A template containing a practice and an experimental phase"
 set coordinates uniform
@@ -54,6 +54,12 @@ define notepad CHANGELOG
 	- Removed all files from the file pool and added them to the experimental folder
 	- Added trial lists for IMDF memory task. Same constraints are applied as to
 	TNT test in prescan session
+	
+	# 2021-04-10:
+	- Trial lists TNT recall and TNT eval are no longer static because no 
+	physiological measures anymore
+	Generated new trial lists for each pp, on the basis of constraints as 
+	discussed by email
 	__end__
 	set description "A simple notepad to document your experiment. This plug-in does nothing."
 
@@ -281,7 +287,7 @@ define inline_script IMDF_set_repeat_variable_confidence
 	set _prepare ""
 
 define notepad Questions_CVS
-	set note "Translation confidence rating"
+	set note "Not everything is translated here"
 	set description "A simple notepad to document your experiment. This plug-in does nothing."
 
 define inline_script SAM_ROI_locator
@@ -442,267 +448,16 @@ define sketchpad TNT_evaluation1_end
 	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="Bitte warten Sie auf weitere Anweisungen..." x=4 y=-5 z_index=0
 
 define loop TNT_evaluation1_lab_blockloop
-	set source_file ""
-	set source table
+	set source_file "blockloop_eval_TNT_postscan_PP_[subject_nr].csv"
+	set source file
 	set repeat 1
 	set order sequential
 	set description "Repeatedly runs another item"
-	set cycles 84
+	set cycles 1
 	set continuous no
 	set break_if_on_first yes
 	set break_if never
-	setcycle 0 Emotion "neg-filler"
-	setcycle 0 Scene "Animals_047_hdisgust.jpg"
-	setcycle 0 Object "sunglasses01.jpg"
-	setcycle 1 Emotion "neu-filler"
-	setcycle 1 Scene "neutral_053.jpg"
-	setcycle 1 Object "pingpongracket.jpg"
-	setcycle 2 Emotion neg
-	setcycle 2 Scene "Animals_007_h_disgustfear.jpg"
-	setcycle 2 Object "comb02a.jpg"
-	setcycle 3 Emotion neu
-	setcycle 3 Scene "neutral_222.jpg"
-	setcycle 3 Object "feather03a.jpg"
-	setcycle 4 Emotion neg
-	setcycle 4 Scene "Objects_328_hdisgust.jpg"
-	setcycle 4 Object "boot02b.jpg"
-	setcycle 5 Emotion neu
-	setcycle 5 Scene "neutral_227.jpg"
-	setcycle 5 Object "chessboard.jpg"
-	setcycle 6 Emotion neu
-	setcycle 6 Scene "neutral_022.jpg"
-	setcycle 6 Object "pencilsharpener02a.jpg"
-	setcycle 7 Emotion neg
-	setcycle 7 Scene "2900.1_people_crying.jpg"
-	setcycle 7 Object "box01.jpg"
-	setcycle 8 Emotion neg
-	setcycle 8 Scene "9050_people_accident.jpg"
-	setcycle 8 Object "dice05a.jpg"
-	setcycle 9 Emotion neg
-	setcycle 9 Scene "Faces_363_vsad.jpg"
-	setcycle 9 Object "measuringtape01.jpg"
-	setcycle 10 Emotion neu
-	setcycle 10 Scene "neutral_580.jpg"
-	setcycle 10 Object "candle08b.jpg"
-	setcycle 11 Emotion neg
-	setcycle 11 Scene "1304._animal_fear.jpg"
-	setcycle 11 Object "crayon.jpg"
-	setcycle 12 Emotion neu
-	setcycle 12 Scene "neutral_195.jpg"
-	setcycle 12 Object "cup01.jpg"
-	setcycle 13 Emotion neu
-	setcycle 13 Scene "neutral_017.jpg"
-	setcycle 13 Object "hat03b.jpg"
-	setcycle 14 Emotion neg
-	setcycle 14 Scene "Objects_006_hdisgust.jpg"
-	setcycle 14 Object "towel02a.jpg"
-	setcycle 15 Emotion neu
-	setcycle 15 Scene "neutral_100.jpg"
-	setcycle 15 Object "drum.jpg"
-	setcycle 16 Emotion neg
-	setcycle 16 Scene "9412_people_sad.jpg"
-	setcycle 16 Object "book01b.jpg"
-	setcycle 17 Emotion neu
-	setcycle 17 Scene "neutral_144.jpg"
-	setcycle 17 Object "chair.jpg"
-	setcycle 18 Emotion "neu-filler"
-	setcycle 18 Scene "neutral_066.jpg"
-	setcycle 18 Object "fryingpan02a.jpg"
-	setcycle 19 Emotion neu
-	setcycle 19 Scene "neutral_246.jpg"
-	setcycle 19 Object "stackingrings01a.jpg"
-	setcycle 20 Emotion neg
-	setcycle 20 Scene "People_033_hsad.jpg"
-	setcycle 20 Object "cane.jpg"
-	setcycle 21 Emotion neu
-	setcycle 21 Scene "neutral_007.jpg"
-	setcycle 21 Object "shirt01.jpg"
-	setcycle 22 Emotion neg
-	setcycle 22 Scene "6550_people_fear.jpg"
-	setcycle 22 Object "plasticflower01a.jpg"
-	setcycle 23 Emotion "neg-filler"
-	setcycle 23 Scene "Animals_087_h.jpg"
-	setcycle 23 Object " scale01a.jpg"
-	setcycle 24 Emotion neu
-	setcycle 24 Scene "neutral_098.jpg"
-	setcycle 24 Object "tuque03b.jpg"
-	setcycle 25 Emotion neg
-	setcycle 25 Scene "Animals_041_hfeardisgust.jpg"
-	setcycle 25 Object "hourglass.jpg"
-	setcycle 26 Emotion neg
-	setcycle 26 Scene "People_140_hsad.jpg"
-	setcycle 26 Object "wallet04.jpg"
-	setcycle 27 Emotion neu
-	setcycle 27 Scene "neutral_058.jpg"
-	setcycle 27 Object "handfan01b.jpg"
-	setcycle 28 Emotion neu
-	setcycle 28 Scene "neutral_128.jpg"
-	setcycle 28 Object "bow04.jpg"
-	setcycle 29 Emotion neg
-	setcycle 29 Scene "9414_people_fighting.jpg"
-	setcycle 29 Object "teabag.jpg"
-	setcycle 30 Emotion neu
-	setcycle 30 Scene "neutral_192.jpg"
-	setcycle 30 Object "negativefilm.jpg"
-	setcycle 31 Emotion neu
-	setcycle 31 Scene "neutral_024.jpg"
-	setcycle 31 Object "clothespin03b.jpg"
-	setcycle 32 Emotion neg
-	setcycle 32 Scene "People_127_fearh.jpg"
-	setcycle 32 Object "makeupbrush04.jpg"
-	setcycle 33 Emotion "neg-filler"
-	setcycle 33 Scene "Objects_283_hsad.jpg"
-	setcycle 33 Object " microscope.jpg"
-	setcycle 34 Emotion neg
-	setcycle 34 Scene "9440_object_disgustandfear.jpg"
-	setcycle 34 Object "glassmop.jpg"
-	setcycle 35 Emotion neg
-	setcycle 35 Scene "2700._people_crying_sad.jpg"
-	setcycle 35 Object "pillow02b.jpg"
-	setcycle 36 Emotion "neu-filler"
-	setcycle 36 Scene "neutral_716.jpg"
-	setcycle 36 Object "waterbottle03.jpg"
-	setcycle 37 Emotion neg
-	setcycle 37 Scene "People_201_vsadterror.jpg"
-	setcycle 37 Object "globe.jpg"
-	setcycle 38 Emotion neu
-	setcycle 38 Scene "neutral_374.jpg"
-	setcycle 38 Object "rubberglove02b.jpg"
-	setcycle 39 Emotion neg
-	setcycle 39 Scene "9290_object_disgsut.jpg"
-	setcycle 39 Object "clipboard.jpg"
-	setcycle 40 Emotion neu
-	setcycle 40 Scene "neutral_065.jpg"
-	setcycle 40 Object "pylon.jpg"
-	setcycle 41 Emotion neu
-	setcycle 41 Scene "neutral_390.jpg"
-	setcycle 41 Object "toothbrush03b.jpg"
-	setcycle 42 Emotion neu
-	setcycle 42 Scene "neutral_509.jpg"
-	setcycle 42 Object "battery02b.jpg"
-	setcycle 43 Emotion neg
-	setcycle 43 Scene "People_225_hdisgustsad.jpg"
-	setcycle 43 Object "envelope03a.jpg"
-	setcycle 44 Emotion neu
-	setcycle 44 Scene "neutral_226.jpg"
-	setcycle 44 Object "ring01.jpg"
-	setcycle 45 Emotion neu
-	setcycle 45 Scene "neutral_050.jpg"
-	setcycle 45 Object "medal02b.jpg"
-	setcycle 46 Emotion neg
-	setcycle 46 Scene "8480_people_fear.jpg"
-	setcycle 46 Object "safetypin.jpg"
-	setcycle 47 Emotion "neg-filler"
-	setcycle 47 Scene "Animals_020_h_fear.jpg"
-	setcycle 47 Object "lightbulb01.jpg"
-	setcycle 48 Emotion neg
-	setcycle 48 Scene "1201_animal_fearanddisgust.jpg"
-	setcycle 48 Object "ruler05.jpg"
-	setcycle 49 Emotion neu
-	setcycle 49 Scene "neutral_659.jpg"
-	setcycle 49 Object "lock03a.jpg"
-	setcycle 50 Emotion neg
-	setcycle 50 Scene "Objects_021_vdisgust.jpg"
-	setcycle 50 Object "thimble.jpg"
-	setcycle 51 Emotion neu
-	setcycle 51 Scene "neutral_107.jpg"
-	setcycle 51 Object "baseball01a.jpg"
-	setcycle 52 Emotion "neu-filler"
-	setcycle 52 Scene "neutral_421.jpg"
-	setcycle 52 Object "paintroller01.jpg"
-	setcycle 53 Emotion neg
-	setcycle 53 Scene "9421_people_sad.jpg"
-	setcycle 53 Object "protractor.jpg"
-	setcycle 54 Emotion neu
-	setcycle 54 Scene "neutral_614.jpg"
-	setcycle 54 Object "birdie.jpg"
-	setcycle 55 Emotion neg
-	setcycle 55 Scene "People_077_vfear.jpg"
-	setcycle 55 Object "hanger02a.jpg"
-	setcycle 56 Emotion neu
-	setcycle 56 Scene "neutral_247.jpg"
-	setcycle 56 Object "lifejacket.jpg"
-	setcycle 57 Emotion neg
-	setcycle 57 Scene "2703_people_cryingsad.jpg"
-	setcycle 57 Object "bag.jpg"
-	setcycle 58 Emotion neu
-	setcycle 58 Scene "neutral_706.jpg"
-	setcycle 58 Object "fan.jpg"
-	setcycle 59 Emotion neu
-	setcycle 59 Scene "neutral_064.jpg"
-	setcycle 59 Object "tape02a.jpg"
-	setcycle 60 Emotion neg
-	setcycle 60 Scene "Animals_221_hdisgustfear.jpg"
-	setcycle 60 Object "binoculars01b.jpg"
-	setcycle 61 Emotion "neu-filler"
-	setcycle 61 Scene "neutral_197.jpg"
-	setcycle 61 Object "match.jpg"
-	setcycle 62 Emotion neg
-	setcycle 62 Scene "Animals_008_v_disgust.jpg"
-	setcycle 62 Object "spoon01.jpg"
-	setcycle 63 Emotion neg
-	setcycle 63 Scene "2981_animal_disgust.jpg"
-	setcycle 63 Object "mirror.jpg"
-	setcycle 64 Emotion "neg-filler"
-	setcycle 64 Scene "Objects_106_vdisgust.jpg"
-	setcycle 64 Object "brick.jpg"
-	setcycle 65 Emotion neg
-	setcycle 65 Scene "1033_animal_fearanddisgust.jpg"
-	setcycle 65 Object "key01.jpg"
-	setcycle 66 Emotion neu
-	setcycle 66 Scene "neutral_409.jpg"
-	setcycle 66 Object "violin.jpg"
-	setcycle 67 Emotion neg
-	setcycle 67 Scene "9940_object_fear.jpg"
-	setcycle 67 Object "branch02.jpg"
-	setcycle 68 Emotion neu
-	setcycle 68 Scene "neutral_582.jpg"
-	setcycle 68 Object "hinge.jpg"
-	setcycle 69 Emotion neu
-	setcycle 69 Scene "neutral_331.jpg"
-	setcycle 69 Object "radio02.jpg"
-	setcycle 70 Emotion neu
-	setcycle 70 Scene "neutral_293.jpg"
-	setcycle 70 Object "belt02a.jpg"
-	setcycle 71 Emotion neg
-	setcycle 71 Scene "Faces_368_hsaddisgust.jpg"
-	setcycle 71 Object "seashell.jpg"
-	setcycle 72 Emotion neg
-	setcycle 72 Scene "2811_object_fear.jpg"
-	setcycle 72 Object "measuringcup01.jpg"
-	setcycle 73 Emotion neu
-	setcycle 73 Scene "neutral_310.jpg"
-	setcycle 73 Object "playingcard04.jpg"
-	setcycle 74 Emotion neg
-	setcycle 74 Scene "6520_people_fear.jpg"
-	setcycle 74 Object "calculator01.jpg"
-	setcycle 75 Emotion neu
-	setcycle 75 Scene "neutral_380.jpg"
-	setcycle 75 Object "watch02a.jpg"
-	setcycle 76 Emotion neg
-	setcycle 76 Scene "People_001_hsadterror.jpg"
-	setcycle 76 Object "stapler03a.jpg"
-	setcycle 77 Emotion neu
-	setcycle 77 Scene "neutral_550.jpg"
-	setcycle 77 Object "magnifyingglass01b.jpg"
-	setcycle 78 Emotion neg
-	setcycle 78 Scene "9433_people-disgust.jpg"
-	setcycle 78 Object "pictureframe04.jpg"
-	setcycle 79 Emotion neu
-	setcycle 79 Scene "neutral_512.jpg"
-	setcycle 79 Object "binder03b.jpg"
-	setcycle 80 Emotion neu
-	setcycle 80 Scene "neutral_134.jpg"
-	setcycle 80 Object "bottlecap.jpg"
-	setcycle 81 Emotion neg
-	setcycle 81 Scene "9183_animal_disgustandsad.jpg"
-	setcycle 81 Object "flashlight02b.jpg"
-	setcycle 82 Emotion "neg-filler"
-	setcycle 82 Scene "People_121_hsad.jpg"
-	setcycle 82 Object "CD.jpg"
-	setcycle 83 Emotion "neu-filler"
-	setcycle 83 Scene "neutral_169.jpg"
-	setcycle 83 Object "button01.jpg"
+	setcycle 0 empty_column ""
 	run TNT_evaluation1_lab_trialsequence
 
 define sequence TNT_evaluation1_lab_blocksequence
@@ -743,7 +498,7 @@ define sketchpad TNT_recall
 	set description "Displays stimuli"
 	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=20 html=yes show_if=always text="Please describe the image uniquely in 1 sentence (15 sec)" x=0 y=0 z_index=0
 
-define loop TNT_recall_1
+define loop TNT_recall_2
 	set source_file ""
 	set source table
 	set repeat 1
@@ -757,267 +512,16 @@ define loop TNT_recall_1
 	run TNT_recall_blocksequence
 
 define loop TNT_recall_blockloop
-	set source_file ""
-	set source table
+	set source_file "blockloop_TNT_test_postscan_PP_[subject_nr].csv"
+	set source file
 	set repeat 1
-	set order random
+	set order sequential
 	set description "Repeatedly runs another item"
-	set cycles 84
+	set cycles 1
 	set continuous no
 	set break_if_on_first yes
 	set break_if never
-	setcycle 0 Emotion "neg-filler"
-	setcycle 0 Scene "Animals_047_hdisgust.jpg"
-	setcycle 0 Object "sunglasses01.jpg"
-	setcycle 1 Emotion "neu-filler"
-	setcycle 1 Scene "neutral_053.jpg"
-	setcycle 1 Object "pingpongracket.jpg"
-	setcycle 2 Emotion neg
-	setcycle 2 Scene "Animals_007_h_disgustfear.jpg"
-	setcycle 2 Object "comb02a.jpg"
-	setcycle 3 Emotion neu
-	setcycle 3 Scene "neutral_222.jpg"
-	setcycle 3 Object "feather03a.jpg"
-	setcycle 4 Emotion neg
-	setcycle 4 Scene "Objects_328_hdisgust.jpg"
-	setcycle 4 Object "boot02b.jpg"
-	setcycle 5 Emotion neu
-	setcycle 5 Scene "neutral_227.jpg"
-	setcycle 5 Object "chessboard.jpg"
-	setcycle 6 Emotion neu
-	setcycle 6 Scene "neutral_022.jpg"
-	setcycle 6 Object "pencilsharpener02a.jpg"
-	setcycle 7 Emotion neg
-	setcycle 7 Scene "2900.1_people_crying.jpg"
-	setcycle 7 Object "box01.jpg"
-	setcycle 8 Emotion neg
-	setcycle 8 Scene "9050_people_accident.jpg"
-	setcycle 8 Object "dice05a.jpg"
-	setcycle 9 Emotion neg
-	setcycle 9 Scene "Faces_363_vsad.jpg"
-	setcycle 9 Object "measuringtape01.jpg"
-	setcycle 10 Emotion neu
-	setcycle 10 Scene "neutral_580.jpg"
-	setcycle 10 Object "candle08b.jpg"
-	setcycle 11 Emotion neg
-	setcycle 11 Scene "1304._animal_fear.jpg"
-	setcycle 11 Object "crayon.jpg"
-	setcycle 12 Emotion neu
-	setcycle 12 Scene "neutral_195.jpg"
-	setcycle 12 Object "cup01.jpg"
-	setcycle 13 Emotion neu
-	setcycle 13 Scene "neutral_017.jpg"
-	setcycle 13 Object "hat03b.jpg"
-	setcycle 14 Emotion neg
-	setcycle 14 Scene "Objects_006_hdisgust.jpg"
-	setcycle 14 Object "towel02a.jpg"
-	setcycle 15 Emotion neu
-	setcycle 15 Scene "neutral_100.jpg"
-	setcycle 15 Object "drum.jpg"
-	setcycle 16 Emotion neg
-	setcycle 16 Scene "9412_people_sad.jpg"
-	setcycle 16 Object "book01b.jpg"
-	setcycle 17 Emotion neu
-	setcycle 17 Scene "neutral_144.jpg"
-	setcycle 17 Object "chair.jpg"
-	setcycle 18 Emotion "neu-filler"
-	setcycle 18 Scene "neutral_066.jpg"
-	setcycle 18 Object "fryingpan02a.jpg"
-	setcycle 19 Emotion neu
-	setcycle 19 Scene "neutral_246.jpg"
-	setcycle 19 Object "stackingrings01a.jpg"
-	setcycle 20 Emotion neg
-	setcycle 20 Scene "People_033_hsad.jpg"
-	setcycle 20 Object "cane.jpg"
-	setcycle 21 Emotion neu
-	setcycle 21 Scene "neutral_007.jpg"
-	setcycle 21 Object "shirt01.jpg"
-	setcycle 22 Emotion neg
-	setcycle 22 Scene "6550_people_fear.jpg"
-	setcycle 22 Object "plasticflower01a.jpg"
-	setcycle 23 Emotion "neg-filler"
-	setcycle 23 Scene "Animals_087_h.jpg"
-	setcycle 23 Object " scale01a.jpg"
-	setcycle 24 Emotion neu
-	setcycle 24 Scene "neutral_098.jpg"
-	setcycle 24 Object "tuque03b.jpg"
-	setcycle 25 Emotion neg
-	setcycle 25 Scene "Animals_041_hfeardisgust.jpg"
-	setcycle 25 Object "hourglass.jpg"
-	setcycle 26 Emotion neg
-	setcycle 26 Scene "People_140_hsad.jpg"
-	setcycle 26 Object "wallet04.jpg"
-	setcycle 27 Emotion neu
-	setcycle 27 Scene "neutral_058.jpg"
-	setcycle 27 Object "handfan01b.jpg"
-	setcycle 28 Emotion neu
-	setcycle 28 Scene "neutral_128.jpg"
-	setcycle 28 Object "bow04.jpg"
-	setcycle 29 Emotion neg
-	setcycle 29 Scene "9414_people_fighting.jpg"
-	setcycle 29 Object "teabag.jpg"
-	setcycle 30 Emotion neu
-	setcycle 30 Scene "neutral_192.jpg"
-	setcycle 30 Object "negativefilm.jpg"
-	setcycle 31 Emotion neu
-	setcycle 31 Scene "neutral_024.jpg"
-	setcycle 31 Object "clothespin03b.jpg"
-	setcycle 32 Emotion neg
-	setcycle 32 Scene "People_127_fearh.jpg"
-	setcycle 32 Object "makeupbrush04.jpg"
-	setcycle 33 Emotion "neg-filler"
-	setcycle 33 Scene "Objects_283_hsad.jpg"
-	setcycle 33 Object " microscope.jpg"
-	setcycle 34 Emotion neg
-	setcycle 34 Scene "9440_object_disgustandfear.jpg"
-	setcycle 34 Object "glassmop.jpg"
-	setcycle 35 Emotion neg
-	setcycle 35 Scene "2700._people_crying_sad.jpg"
-	setcycle 35 Object "pillow02b.jpg"
-	setcycle 36 Emotion "neu-filler"
-	setcycle 36 Scene "neutral_716.jpg"
-	setcycle 36 Object "waterbottle03.jpg"
-	setcycle 37 Emotion neg
-	setcycle 37 Scene "People_201_vsadterror.jpg"
-	setcycle 37 Object "globe.jpg"
-	setcycle 38 Emotion neu
-	setcycle 38 Scene "neutral_374.jpg"
-	setcycle 38 Object "rubberglove02b.jpg"
-	setcycle 39 Emotion neg
-	setcycle 39 Scene "9290_object_disgsut.jpg"
-	setcycle 39 Object "clipboard.jpg"
-	setcycle 40 Emotion neu
-	setcycle 40 Scene "neutral_065.jpg"
-	setcycle 40 Object "pylon.jpg"
-	setcycle 41 Emotion neu
-	setcycle 41 Scene "neutral_390.jpg"
-	setcycle 41 Object "toothbrush03b.jpg"
-	setcycle 42 Emotion neu
-	setcycle 42 Scene "neutral_509.jpg"
-	setcycle 42 Object "battery02b.jpg"
-	setcycle 43 Emotion neg
-	setcycle 43 Scene "People_225_hdisgustsad.jpg"
-	setcycle 43 Object "envelope03a.jpg"
-	setcycle 44 Emotion neu
-	setcycle 44 Scene "neutral_226.jpg"
-	setcycle 44 Object "ring01.jpg"
-	setcycle 45 Emotion neu
-	setcycle 45 Scene "neutral_050.jpg"
-	setcycle 45 Object "medal02b.jpg"
-	setcycle 46 Emotion neg
-	setcycle 46 Scene "8480_people_fear.jpg"
-	setcycle 46 Object "safetypin.jpg"
-	setcycle 47 Emotion "neg-filler"
-	setcycle 47 Scene "Animals_020_h_fear.jpg"
-	setcycle 47 Object "lightbulb01.jpg"
-	setcycle 48 Emotion neg
-	setcycle 48 Scene "1201_animal_fearanddisgust.jpg"
-	setcycle 48 Object "ruler05.jpg"
-	setcycle 49 Emotion neu
-	setcycle 49 Scene "neutral_659.jpg"
-	setcycle 49 Object "lock03a.jpg"
-	setcycle 50 Emotion neg
-	setcycle 50 Scene "Objects_021_vdisgust.jpg"
-	setcycle 50 Object "thimble.jpg"
-	setcycle 51 Emotion neu
-	setcycle 51 Scene "neutral_107.jpg"
-	setcycle 51 Object "baseball01a.jpg"
-	setcycle 52 Emotion "neu-filler"
-	setcycle 52 Scene "neutral_421.jpg"
-	setcycle 52 Object "paintroller01.jpg"
-	setcycle 53 Emotion neg
-	setcycle 53 Scene "9421_people_sad.jpg"
-	setcycle 53 Object "protractor.jpg"
-	setcycle 54 Emotion neu
-	setcycle 54 Scene "neutral_614.jpg"
-	setcycle 54 Object "birdie.jpg"
-	setcycle 55 Emotion neg
-	setcycle 55 Scene "People_077_vfear.jpg"
-	setcycle 55 Object "hanger02a.jpg"
-	setcycle 56 Emotion neu
-	setcycle 56 Scene "neutral_247.jpg"
-	setcycle 56 Object "lifejacket.jpg"
-	setcycle 57 Emotion neg
-	setcycle 57 Scene "2703_people_cryingsad.jpg"
-	setcycle 57 Object "bag.jpg"
-	setcycle 58 Emotion neu
-	setcycle 58 Scene "neutral_706.jpg"
-	setcycle 58 Object "fan.jpg"
-	setcycle 59 Emotion neu
-	setcycle 59 Scene "neutral_064.jpg"
-	setcycle 59 Object "tape02a.jpg"
-	setcycle 60 Emotion neg
-	setcycle 60 Scene "Animals_221_hdisgustfear.jpg"
-	setcycle 60 Object "binoculars01b.jpg"
-	setcycle 61 Emotion "neu-filler"
-	setcycle 61 Scene "neutral_197.jpg"
-	setcycle 61 Object "match.jpg"
-	setcycle 62 Emotion neg
-	setcycle 62 Scene "Animals_008_v_disgust.jpg"
-	setcycle 62 Object "spoon01.jpg"
-	setcycle 63 Emotion neg
-	setcycle 63 Scene "2981_animal_disgust.jpg"
-	setcycle 63 Object "mirror.jpg"
-	setcycle 64 Emotion "neg-filler"
-	setcycle 64 Scene "Objects_106_vdisgust.jpg"
-	setcycle 64 Object "brick.jpg"
-	setcycle 65 Emotion neg
-	setcycle 65 Scene "1033_animal_fearanddisgust.jpg"
-	setcycle 65 Object "key01.jpg"
-	setcycle 66 Emotion neu
-	setcycle 66 Scene "neutral_409.jpg"
-	setcycle 66 Object "violin.jpg"
-	setcycle 67 Emotion neg
-	setcycle 67 Scene "9940_object_fear.jpg"
-	setcycle 67 Object "branch02.jpg"
-	setcycle 68 Emotion neu
-	setcycle 68 Scene "neutral_582.jpg"
-	setcycle 68 Object "hinge.jpg"
-	setcycle 69 Emotion neu
-	setcycle 69 Scene "neutral_331.jpg"
-	setcycle 69 Object "radio02.jpg"
-	setcycle 70 Emotion neu
-	setcycle 70 Scene "neutral_293.jpg"
-	setcycle 70 Object "belt02a.jpg"
-	setcycle 71 Emotion neg
-	setcycle 71 Scene "Faces_368_hsaddisgust.jpg"
-	setcycle 71 Object "seashell.jpg"
-	setcycle 72 Emotion neg
-	setcycle 72 Scene "2811_object_fear.jpg"
-	setcycle 72 Object "measuringcup01.jpg"
-	setcycle 73 Emotion neu
-	setcycle 73 Scene "neutral_310.jpg"
-	setcycle 73 Object "playingcard04.jpg"
-	setcycle 74 Emotion neg
-	setcycle 74 Scene "6520_people_fear.jpg"
-	setcycle 74 Object "calculator01.jpg"
-	setcycle 75 Emotion neu
-	setcycle 75 Scene "neutral_380.jpg"
-	setcycle 75 Object "watch02a.jpg"
-	setcycle 76 Emotion neg
-	setcycle 76 Scene "People_001_hsadterror.jpg"
-	setcycle 76 Object "stapler03a.jpg"
-	setcycle 77 Emotion neu
-	setcycle 77 Scene "neutral_550.jpg"
-	setcycle 77 Object "magnifyingglass01b.jpg"
-	setcycle 78 Emotion neg
-	setcycle 78 Scene "9433_people-disgust.jpg"
-	setcycle 78 Object "pictureframe04.jpg"
-	setcycle 79 Emotion neu
-	setcycle 79 Scene "neutral_512.jpg"
-	setcycle 79 Object "binder03b.jpg"
-	setcycle 80 Emotion neu
-	setcycle 80 Scene "neutral_134.jpg"
-	setcycle 80 Object "bottlecap.jpg"
-	setcycle 81 Emotion neg
-	setcycle 81 Scene "9183_animal_disgustandsad.jpg"
-	setcycle 81 Object "flashlight02b.jpg"
-	setcycle 82 Emotion "neg-filler"
-	setcycle 82 Scene "People_121_hsad.jpg"
-	setcycle 82 Object "CD.jpg"
-	setcycle 83 Emotion "neu-filler"
-	setcycle 83 Scene "neutral_169.jpg"
-	setcycle 83 Object "button01.jpg"
+	setcycle 0 empty_column ""
 	run TNT_recall_trialsequence
 
 define sequence TNT_recall_blocksequence
@@ -1168,16 +672,16 @@ define sequence experiment
 	run Questions_CVS always
 	run CHANGELOG always
 	run postlab_todos always
-	run welcome never
-	run instruct_1 never
-	run instruct_2 never
-	run get_ready never
-	run waiting_for_triggerpulse never
-	run fixation never
-	run set_coordinates_feedback_box never
+	run welcome always
+	run instruct_1 always
+	run instruct_2 always
+	run get_ready always
+	run waiting_for_triggerpulse always
+	run fixation always
+	run set_coordinates_feedback_box always
 	run set_scaling_factors always
-	run TNT_recall_1 never
-	run IMDF_recall always
+	run TNT_recall_2 never
+	run IMDF_recall never
 	run TNT_evaluation1_postlab always
 	run TNT_evaluation1_end always
 
@@ -1279,7 +783,7 @@ define notepad postlab_todos
 define sketchpad scene
 	set duration 6500
 	set description "Displays stimuli"
-	draw image center=1 file="[Scene]" scale="[scale_scene_recall]" show_if=always x=0 y=-96 z_index=0
+	draw image center=1 file="[Scene]" scale=1 show_if=always x=0 y=-96 z_index=0
 
 define inline_script set_coordinates_feedback_box
 	set description "Executes Python code"
