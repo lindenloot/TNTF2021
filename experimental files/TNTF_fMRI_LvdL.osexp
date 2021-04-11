@@ -153,7 +153,7 @@ define feedback IMDF_fMRI_instruct
 	set reset_variables yes
 	set duration 2000
 	set description "Displays stimuli"
-	draw textline center=1 color="[color]" font_bold=no font_family=mono font_italic=no font_size=40 html=yes show_if=always text="[remember_condition]" x=0 y=0 z_index=0
+	draw textline center=1 color="[color]" font_bold=no font_family=mono font_italic=no font_size=40 html=yes show_if=always text="[instruction_msg]" x=0 y=0 z_index=0
 
 define inline_script IMDF_fMRI_jitterblankISIscript
 	set description "Executes Python code"
@@ -182,7 +182,7 @@ define sequence IMDF_fMRI_trialsequence
 	set flush_keyboard yes
 	set description "Runs a number of items in sequence"
 	run IMDF_fMRI_jitterblankISIscript always
-	run new_inline_script always
+	run determine_instruction always
 	run IMDF_fMRI_fixation always
 	run IMDF_fMRI_scene "[condition] != \"NULL\""
 	run IMDF_fMRI_sceneobject "[condition] != \"NULL\""
@@ -191,9 +191,9 @@ define sequence IMDF_fMRI_trialsequence
 	run IMDF_fMRI_blankISI always
 	run logger always
 	run blank_before_t_presses "[trial_count] == 79"
+	run get_ready "[trial_count] == 79"
 	run wait_for_five_t_presses "[trial_count] == 79"
 	run end "[trial_count] == 79"
-	run get_ready "[trial_count] == 79"
 
 define sequence IMDF_fMRI_trialsequence_practice
 	set flush_keyboard yes
@@ -248,10 +248,9 @@ define sequence TNTF_fMRI_blocksequence
 	set flush_keyboard yes
 	set description "Runs a number of items in sequence"
 	run TNT_fMRI_blockloop always
-	run blank_before_t_presses always
+	run get_ready always
 	run wait_for_five_t_presses always
 	run end always
-	run get_ready always
 
 define inline_script TNTF_fMRI_jitteredfixationscript
 	set description "Executes Python code"
@@ -331,10 +330,9 @@ define sequence TNT_fMRI_trialsequence
 	run calculate_time_remaining always
 	run add_timeremaining "[timeremaining] >= 0"
 	run logger always
-	run blank_before_t_presses "[trial_count] == 64"
+	run get_ready "[trial_count] == 64"
 	run wait_for_five_t_presses "[trial_count] == 64"
 	run end "[trial_count] == 64"
-	run get_ready "[trial_count] == 64"
 
 define feedback add_timeremaining
 	set reset_variables yes
@@ -366,6 +364,19 @@ define inline_script define_constants
 	set _run ""
 	set _prepare "var.timeout_keypress = 3000"
 
+define inline_script determine_instruction
+	set description "Executes Python code"
+	set _run ""
+	___prepare__
+	print("remember_condition = ", var.remember_condition)
+	if var.remember_condition == "TBF":
+	    var.instruction_msg = "VVV"
+	elif var.remember_condition == "TBR":
+	    var.instruction_msg = "MMM"
+	
+	    
+	__end__
+
 define sketchpad end
 	set duration keypress
 	set description "Displays stimuli"
@@ -377,21 +388,21 @@ define sequence experiment
 	run todo_new always
 	run Questions_for_CVS always
 	run CHANGELOG always
+	run get_ready always
 	run wait_for_five_t_presses_initial always
 	run welcome always
-	run get_ready always
 	run fixation always
 	run define_constants always
 	run scaling_factors always
 	run refresher_block_loop never
 	run welcome always
-	run wait_for_five_t_presses always
 	run get_ready always
+	run wait_for_five_t_presses always
 	run TNTF_fMRI never
-	run IMDF_fMRI_blockloop_practice always
+	run IMDF_fMRI_blockloop_practice never
+	run get_ready always
 	run wait_for_five_t_presses always
 	run end always
-	run get_ready always
 	run IMDF_fMRI_blockloop always
 	run wait_for_five_t_presses always
 	run end always
@@ -412,20 +423,13 @@ define inline_script fixation
 	__end__
 
 define sketchpad get_ready
-	set duration keypress
+	set duration 0
 	set description "Displays stimuli"
 	draw textline center=1 color=black font_bold=no font_family=mono font_italic=no font_size=30 html=yes show_if=always text="In 10 sekunden geht es los!" x=-11 y=-6 z_index=0
 
 define logger logger
 	set description "Logs experimental data"
 	set auto_log yes
-
-define inline_script new_inline_script
-	set description "Executes Python code"
-	set _run ""
-	___prepare__
-	print("condition = ", var.condition)
-	__end__
 
 define logger new_logger
 	set description "Logs experimental data"

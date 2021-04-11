@@ -1198,7 +1198,7 @@ define keyboard_response practice_intrusionrating_response
 	set event_type keypress
 	set duration keypress
 	set description "Collects keyboard responses"
-	set allowed_responses "g;b;y"
+	set allowed_responses "g;b;r"
 
 define sketchpad practice_jitteredfixation
 	set duration "[TNTfixation_jitter]"
