@@ -9,8 +9,8 @@ from PIL import Image
 
 src_imgs = "/home/lotje/Documents/Research, teaching and programming/OpenSesame/Scripts/Others/Claudius Schroeder/TNTF2021/experimental files"
 
-exp = "IMDF"
-stim_type = "Scene"
+exp = "TNT"
+stim_type = "Object"
 
 src_exp = "%s_pairs_exp.csv" % exp
 src_fillers = "%s_pairs_fillers.csv" % exp
@@ -37,7 +37,9 @@ for row in dm:
     if stim_type == "Object":
         if exp == "TNT":
             if (w, h) != (2000, 2000):
+                
                 print("\tTNT:", stim)
+                print("\t", w, h)
                 
         if exp == "IMDF":
             if (w, h) != (768, 576):

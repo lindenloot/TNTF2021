@@ -1230,7 +1230,7 @@ define sequence practice_trialsequence
 	run logger always
 
 define sketchpad scene
-	set duration 3000
+	set duration 2000
 	set description "Displays stimuli"
 	draw image center=1 file="[Scene]" scale=1 show_if=always x=0 y=-96 z_index=0
 
