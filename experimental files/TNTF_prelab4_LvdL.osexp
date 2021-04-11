@@ -95,6 +95,9 @@ define notepad CHANGELOG
 	
 	# 2021-04-10
 	Translated an English sketchpad
+	
+	# 2021-04-11
+	Removed fMRI fillers from practice loops
 	__end__
 	set description "A simple notepad to document your experiment. This plug-in does nothing."
 

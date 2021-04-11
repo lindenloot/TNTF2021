@@ -42,6 +42,7 @@ import helpers
 # Get paths to the stimulus lists
 src_exp = "TNT_pairs_exp.csv"
 src_fillers = "TNT_pairs_fillers.csv"
+src_fillers_practice = "TNT_practice_pairs_fillers.csv"
 
 def getExpBlocks():
     
@@ -105,11 +106,11 @@ def getPracticeBlocks():
         for pp_ID in range(1, 71):
         
             # Read in fillers:
-            dm = io.readtxt(src_fillers)
+            dm = io.readtxt(src_fillers_practice)
             dm = ops.shuffle(dm)
             dm["exp_ID"] = practice_block
 
-            dm = helpers.addThinkColumn(dm, nTrialsPerLevel=3)
+            dm = helpers.addThinkColumn(dm, nTrialsPerLevel=2)
             dm = helpers.addColorColumn(dm)
             # Create an Enforce object, and add constraint
             ef = Enforce(dm)

@@ -311,7 +311,7 @@ define keyboard_response TNT_fMRI_intrusionrating_response
 	set event_type keypress
 	set duration keypress
 	set description "Collects keyboard responses"
-	set allowed_responses "g;b;y"
+	set allowed_responses "g;b;r"
 
 define sketchpad TNT_fMRI_jitteredfixation
 	set duration "[TNTfixation_jitter]"
@@ -383,11 +383,11 @@ define sequence experiment
 	run fixation always
 	run define_constants always
 	run scaling_factors always
-	run refresher_block_loop always
+	run refresher_block_loop never
 	run welcome always
 	run wait_for_five_t_presses always
 	run get_ready always
-	run TNTF_fMRI always
+	run TNTF_fMRI never
 	run IMDF_fMRI_blockloop_practice always
 	run wait_for_five_t_presses always
 	run end always
