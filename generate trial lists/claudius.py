@@ -4,6 +4,7 @@
 
 from datamatrix import DataMatrix
 from datamatrix import io
+from datamatrix import operations as ops
 from pseudorandom import Enforce, MaxRep, MinDist
 import neurodesign.classes
 from neurodesign import generate
@@ -11,10 +12,21 @@ import matplotlib.pyplot as plt
 import os
 import os.path as op
 import time
+import numpy as np
+
+dm = io.readtxt('dm.csv')
+dm = dm["condition"] != "NULL"
+
+
+# Determine the number of trials
+nTrials = dm.length
+# And unique conditions
+nStim = len(np.unique(np.asarray(dm["condition"])))
+print(nStim)
 
 TNTfMRI = neurodesign.classes.experiment(
     TR=2,rho=0, # rho (assumed auotcorrelation coefficient) greatly impacts Fd i.e. higher rho (0.3 = default) = much lower Fd / 0 is best
-    n_stimuli=5, n_trials=124,
+    n_stimuli=nStim, n_trials=nTrials,
     P=[0.20,0.20,0.20,0.20,0.20],
     C=[[1,1,-1,-1,0],[1,0,-1,0,0],[0,1,0,-1,0]],
     t_pre=0,stim_duration=3,t_post=1, # since there are only 20% NULL events incl here I am ok with the intrusion ratings being modled with the NULL events, to add a bit more time to them (does that reasoning work? Or is it the frequency of NULL events that important i.e. not their duration?)
@@ -26,7 +38,18 @@ TNTfMRI = neurodesign.classes.experiment(
     confoundorder=3) # lower confound order seems to more consistently yield better Fe (3 is default, but 1 seems to be best - however, still possible to get a good result with loop if set to 3)
 
 # Read a datafile with Pandas and convert it to a pseudorandom DataFrame.
-TNTpseudM = io.readtxt('/Users/claudius/PycharmProjects2/EXPdesignOP/filepool/TNTrun2csv.csv')
+
+
+# Add a column containing condition as an int
+# NULL trials are excluded?
+i = 0
+
+dm["condition_nr"] = None
+for cond, _dm in ops.split(dm["condition"]):
+    print(cond)
+    dm["condition_nr"][dm["condition"] == cond] = i
+    i +=1
+
 
 # optimisation loop
 
@@ -39,23 +62,13 @@ timeout = time.time() + 60*5 # 5 minutes from now
 
 while True:
 
-    # Create an Enforce object and add constraints
-    ef = Enforce(TNTpseudM)
-    ef.add_constraint(MaxRep,cols=[TNTpseudM.T_ID],maxrep=3)
-    ef.add_constraint(MaxRep,cols=[TNTpseudM.NT_ID],maxrep=3)
-    ef.add_constraint(MaxRep,cols=[TNTpseudM.neu_ID],maxrep=3)
-    ef.add_constraint(MaxRep,cols=[TNTpseudM.neg_ID],maxrep=3)
-    ef.add_constraint(MinDist,cols=[TNTpseudM.null_ID],mindist=2)
-
-    # Enforce the constraints
-    TNTpseudM = ef.enforce()
-
     # convert new datamatrix to a list as input for DES1
-    TNTorder = list(TNTpseudM.order)
-
+    TNTorder = list(dm["condition_nr"])
+    
+    print(TNTorder)
     TNTdES = neurodesign.classes.design(
         order = TNTorder,
-        ITI = generate.iti(ntrials=124, model="exponential", min=1.4, mean=2, max=2.6,
+        ITI = generate.iti(ntrials=nTrials, model="exponential", min=1.4, mean=2, max=2.6,
                            resolution=0.1, seed=1234)[0],
         onsets = [], experiment = TNTfMRI)
 
@@ -66,8 +79,10 @@ while True:
     print("estimation efficiency = ", TNTdES.Fe, "\tdetection power = ", TNTdES.Fd, "\tstimulus frequency = ", TNTdES.Ff, "\tdesign predictability = ", TNTdES.Fc)
 
     if TNTdES.Fe > Fe_threshold and TNTdES.Fd > Fd_threshold and TNTdES.Ff > Ff_threshold and TNTdES.Fc > Fc_threshold or time.time() > timeout:
-
-        break
+        print("Perfect")
+    else:
+        print("Not optimal")
+        #break
 
 print("FINAL: estimation efficiency = ", TNTdES.Fe, "\tdetection power = ", TNTdES.Fd, "\tstimulus frequency = ", TNTdES.Ff, "\tdesign predictability = ", TNTdES.Fc)
 
@@ -110,3 +125,5 @@ out_dir = 'output'
 if not op.isdir(out_dir):
     os.makedirs(out_dir)
 plt.savefig(op.join(out_dir,'TNTrunCONV.pdf'),format="pdf")
+
+print("Done!")

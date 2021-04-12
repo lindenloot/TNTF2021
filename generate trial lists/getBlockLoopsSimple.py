@@ -60,6 +60,9 @@ def getExpBlocks():
         
         for pp_ID in range(1, 71):
             
+            # Read in experimental pairs:
+            main_dm = io.readtxt(src_exp)
+            
             # Read in fillers:
             dm = io.readtxt(src_fillers)
             dm_first, dm_last, dm_remaining = helpers.splitFillers(dm)
@@ -127,4 +130,5 @@ def getPracticeBlocks():
 
 if __name__ == "__main__":
     
+    getExpBlocks()
     getPracticeBlocks()

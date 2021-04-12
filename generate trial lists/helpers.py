@@ -217,14 +217,16 @@ def addConditionColumn(dm):
     """
     
     # Determine the exp (TNT or IMDF)
-    exp = dm["exp_ID"][0]
-
+    exp = dm["Exp_ID"][0]
+    
     for row in dm:
         emotion = row["Emotion"]
-        if exp == "TNT_scanner":
+        if "TNT" in exp:
             col_header = "think_condition"
-        elif exp == "IMDF_scanner":
+        elif "IMDF" in exp:
             col_header = "remember_condition"
+        else:
+            raise Exception("Unknown exp: %s" % exp)
         task_condition = row[col_header]
         old_condition = row["condition"]
         

@@ -55,7 +55,7 @@ def applyConstraints(dm):
     """
     
     # Determine exp (TNT or IMDF):
-    exp = dm["exp_ID"][0]
+    exp = dm["Exp_ID"][0]
     
     while True:
         new_dm = DataMatrix()
@@ -93,7 +93,7 @@ def applyConstraints(dm):
         print("max emotion: ", max_repetition_emotion)
         print("max think: ", max_repetition_task_condition)
         print("max NULL: ", max_repetition_NULL)
-        #sys.exit()
+
         
         # HACK:
         # If max rep also applies to whole main-run, break from the loop
@@ -127,20 +127,28 @@ def addFillers(exp_dm, filler_dm):
     Run 2: starts and ends with 2 fillers
     """
     # Determine the exp (TNT or IMDF):
-    exp = filler_dm["exp_ID"][0]
-    
+    exp = filler_dm["Exp_ID"][0]
+
     # Shuffle the fillers:
     filler_dm = ops.shuffle(filler_dm)
     
     # Randomly assign think or no think:
-    if exp == "TNT_scanner":
+    if "TNT" in exp:
         list_filler_think_conditions = ["T", "T", "NT", "NT"]
         filler_dm["think_condition"] = list_filler_think_conditions
+        #print(filler_dm)
+        #sys.exit()
     
-    elif exp == "IMDF_scanner":
+    elif "IMDF" in exp:
         list_filler_remember_conditions = ["TBR", "TBF"] * 4
         filler_dm["remember_condition"] = list_filler_remember_conditions
- 
+    
+    else:
+        raise Exception("Unknown exp type: %s" % exp)
+    
+    # re-set condition value to "filler"
+    filler_dm["condition"] = "FILLER"
+    
     # Make sure valence is not repeated:
     ef = Enforce(filler_dm)
     ef.add_constraint(MaxRep, cols=[filler_dm.Emotion], maxrep=1)
@@ -169,7 +177,7 @@ def addFillers(exp_dm, filler_dm):
     # at the begining, 2 at the end and four in the middle (halfway):
     # Divide the experimental dm in two halfs by using set_ID
     # to split on (this works because set_ID is not shuffled)
-    if exp == "IMDF_scanner":
+    elif exp == "IMDF_scanner":
         # NOTE that split() returns a tuple containing (value, split dm)
         (_set1, dm_run1), (_set2, dm_run2) = ops.split(exp_dm["Set_ID"])
         
@@ -179,6 +187,9 @@ def addFillers(exp_dm, filler_dm):
         merged_dm = merged_dm << dm_run2
         merged_dm = merged_dm << dm_last
     
+    
+    else:
+        raise Exception("Unknown exp type: %s" % exp)
     return merged_dm
     
 def getMainDm(exp):
@@ -213,33 +224,39 @@ def getMainDm(exp):
     filler_path = "%s_scanner_pairs_fillers.csv" % exp
     
     
-    # Read in the csv file containing exp pairs:
+    # Read in the csv file containing exp pairs and the filler pairs:
     main_dm = io.readtxt(src_path)
+    filler_dm = io.readtxt(filler_path)
+
+    main_dm["Exp_ID"] = "%s_scanner" % exp
+    filler_dm["Exp_ID"] = "%s_scanner" % exp
     
-    # Determine the current experiment:
-    exp = main_dm["exp_ID"][0]
-    
-    # Shuffle the main dm:
+    # Shuffle dms:
     main_dm = ops.shuffle(main_dm)
-
-
+    filler_dm = ops.shuffle(filler_dm)
+    
     # Add columns:
     main_dm = helpers.addValenceColumn(main_dm)
-    
-    if exp == "TNT_scanner":
-        main_dm = helpers.addThinkColumn(main_dm)
-    
-    if exp == "IMDF_scanner":
-        main_dm = helpers.addRememberColumn(main_dm)
+    #filler_dm = helpers.addValenceColumn(filler_dm)
 
+    if exp == "TNT":
+        main_dm = helpers.addThinkColumn(main_dm)
+        #filler_dm = helpers.addThinkColumn(filler_dm)
+    
+    if exp == "IMDF":
+        main_dm = helpers.addRememberColumn(main_dm)
+        #filler_dm = helpers.addRememberColumn(filler_dm)
+    
+    #print(main_dm.column_names)
+    #sys.exit()
+    
     main_dm = helpers.addConditionColumn(main_dm)
+    #filler_dm = helpers.addConditionColumn(filler_dm)
+
     main_dm = helpers.addSetColumn(main_dm)
     
     # Apply constraints:
     main_dm = applyConstraints(main_dm)
-
-    # Add fillers:
-    filler_dm = io.readtxt(filler_path)
     main_dm = addFillers(main_dm, filler_dm)
     
     # Add the Boxcolor variable:
@@ -277,41 +294,54 @@ def getDmsTnt():
         while True:
         
             pp_dm = DataMatrix()
-        
-            for repetition in ["one", "two"]:
-                
-                main_dm = getMainDm(exp="TNT")
-                main_dm["repetition"] = repetition
-                
-                pp_dm = pp_dm << main_dm
-                
+            
+            for main_run in ["first", "second"]:
+            
+                for repetition in ["one", "two"]:
+                    
+                    main_dm = getMainDm(exp="TNT")
+                    main_dm["repetition"] = repetition
+                    main_dm["main_run"] = main_run
+                    pp_dm = pp_dm << main_dm
+            
+            print(pp_dm.length)
             pp_dm["pp_ID"] = pp
             pp_dm["trial_count"] = range(1, pp_dm.length + 1)
             
             # HACK: an extremely ugly hack to make sure that the two
-            # fillers in the middle of the experiment are not the same:
+            # fillers never repeat, not even when two runs are merged:
             
-            # Determine the filler at the end of main run 1:
-            last_filler_run1 = pp_dm["Scene"][pp_dm["trial_count"] == 64][0]
+            # Determine the filler at the end of repetition 1 main run 1:
+            filler_index_64 = pp_dm["Scene"][pp_dm["trial_count"] == 64][0]
             
-            # Determine the filler at the end of main run 1:
-            first_filler_run2 = pp_dm["Scene"][pp_dm["trial_count"] == 65][0]
-    
-        
+            # Determine the filler at the beginning of repetition 2 main run 2:
+            filler_index_65 = pp_dm["Scene"][pp_dm["trial_count"] == 65][0]
+            
+            # Etc. for the other 2 "transitions":
+            filler_index_128 = pp_dm["Scene"][pp_dm["trial_count"] == 128][0]
+            filler_index_129 = pp_dm["Scene"][pp_dm["trial_count"] == 129][0]
+            
+            filler_index_192 = pp_dm["Scene"][pp_dm["trial_count"] == 192][0]
+            filler_index_193 = pp_dm["Scene"][pp_dm["trial_count"] == 193][0]
+
+            # filler_index_256 = pp_dm["Scene"][pp_dm["trial_count"] == 256][0]
+            # filler_index_257 = pp_dm["Scene"][pp_dm["trial_count"] == 257][0]
+
             # If they are not repeated: break from the loop
-            if last_filler_run1 != first_filler_run2:
+            if filler_index_64 != filler_index_65 and \
+                filler_index_128 != filler_index_129 and \
+                filler_index_192 != filler_index_193:
+#                filler_index_256 != filler_index_257:
                 break
             else:
                 print("Filler occurs twice in a row. Let's try again...")
         
         file_name = "TNT_scanning_PP%s.csv" % pp
-        #io.writetxt(pp_dm, "test.csv")
-        #sys.exit()
-        io.writetxt(pp_dm, os.path.join(dst_folder, file_name))
 
+        io.writetxt(pp_dm, os.path.join(dst_folder, file_name))
 
 
 if __name__ == "__main__":
     
-    #getDmsImdf()
+    getDmsImdf()
     getDmsTnt()

@@ -200,5 +200,5 @@ def getBlockLoopsMemoryPostScan():
         
 if __name__ == "__main__":
     
-    #getBlockLoopsMemoryPrescan()
+    getBlockLoopsMemoryPrescan()
     getBlockLoopsMemoryPostScan()
