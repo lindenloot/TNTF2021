@@ -127,20 +127,122 @@ define loop IMDF_fMRI_blockloop_practice
 	set repeat 1
 	set order random
 	set description "Repeatedly runs another item"
-	set cycles 2
+	set cycles 8
 	set continuous no
 	set break_if_on_first yes
 	set break_if never
-	setcycle 0 Emotion neg
-	setcycle 0 Scene "Animals_007_h_disgustfear.jpg"
-	setcycle 0 Instruction VVV
-	setcycle 0 Instruction_color red
-	setcycle 0 Object "teabag.jpg"
+	setcycle 0 Emotion neu
+	setcycle 0 Object "950.jpg"
+	setcycle 0 Scene "neutral_261.jpg"
+	setcycle 0 TBF_ID 91
+	setcycle 0 TBR_ID 9999
+	setcycle 0 Trial_ID filler
+	setcycle 0 condition neu
+	setcycle 0 exp_ID IMDF_scanner
+	setcycle 0 filler yes
+	setcycle 0 neg_ID 91
+	setcycle 0 neu_ID 9999
+	setcycle 0 null_ID 121
+	setcycle 0 order 5
+	setcycle 0 repetition 9999
 	setcycle 1 Emotion neu
-	setcycle 1 Scene "neutral_064.jpg"
-	setcycle 1 Instruction MMM
-	setcycle 1 Instruction_color green
-	setcycle 1 Object "thimble.jpg"
+	setcycle 1 Object "952.jpg"
+	setcycle 1 Scene "neutral_673.jpg"
+	setcycle 1 TBF_ID 92
+	setcycle 1 TBR_ID 9999
+	setcycle 1 Trial_ID filler
+	setcycle 1 condition neu
+	setcycle 1 exp_ID IMDF_scanner
+	setcycle 1 filler yes
+	setcycle 1 neg_ID 92
+	setcycle 1 neu_ID 9999
+	setcycle 1 null_ID 122
+	setcycle 1 order 5
+	setcycle 1 repetition 9999
+	setcycle 2 Emotion neg
+	setcycle 2 Object "953.jpg"
+	setcycle 2 Scene "1050.jpg"
+	setcycle 2 TBF_ID 93
+	setcycle 2 TBR_ID 9999
+	setcycle 2 Trial_ID filler
+	setcycle 2 condition neg
+	setcycle 2 exp_ID IMDF_scanner
+	setcycle 2 filler yes
+	setcycle 2 neg_ID 9999
+	setcycle 2 neu_ID 91
+	setcycle 2 null_ID 123
+	setcycle 2 order 5
+	setcycle 2 repetition 9999
+	setcycle 3 Emotion neg
+	setcycle 3 Object "954.jpg"
+	setcycle 3 Scene "People_143_h.jpg"
+	setcycle 3 TBF_ID 94
+	setcycle 3 TBR_ID 9999
+	setcycle 3 Trial_ID filler
+	setcycle 3 condition neg
+	setcycle 3 exp_ID IMDF_scanner
+	setcycle 3 filler yes
+	setcycle 3 neg_ID 9999
+	setcycle 3 neu_ID 92
+	setcycle 3 null_ID 124
+	setcycle 3 order 5
+	setcycle 3 repetition 9999
+	setcycle 4 Emotion neu
+	setcycle 4 Object "957.jpg"
+	setcycle 4 Scene "neutral_695.jpg"
+	setcycle 4 TBF_ID 9999
+	setcycle 4 TBR_ID 91
+	setcycle 4 Trial_ID filler
+	setcycle 4 condition neu
+	setcycle 4 exp_ID IMDF_scanner
+	setcycle 4 filler yes
+	setcycle 4 neg_ID 93
+	setcycle 4 neu_ID 9999
+	setcycle 4 null_ID 125
+	setcycle 4 order 5
+	setcycle 4 repetition 9999
+	setcycle 5 Emotion neu
+	setcycle 5 Object "975.jpg"
+	setcycle 5 Scene "neutral_707.jpg"
+	setcycle 5 TBF_ID 9999
+	setcycle 5 TBR_ID 92
+	setcycle 5 Trial_ID filler
+	setcycle 5 condition neu
+	setcycle 5 exp_ID IMDF_scanner
+	setcycle 5 filler yes
+	setcycle 5 neg_ID 94
+	setcycle 5 neu_ID 9999
+	setcycle 5 null_ID 126
+	setcycle 5 order 5
+	setcycle 5 repetition 9999
+	setcycle 6 Emotion neg
+	setcycle 6 Object "981.jpg"
+	setcycle 6 Scene "People_133_h.jpg"
+	setcycle 6 TBF_ID 9999
+	setcycle 6 TBR_ID 93
+	setcycle 6 Trial_ID filler
+	setcycle 6 condition neg
+	setcycle 6 exp_ID IMDF_scanner
+	setcycle 6 filler yes
+	setcycle 6 neg_ID 9999
+	setcycle 6 neu_ID 93
+	setcycle 6 null_ID 127
+	setcycle 6 order 5
+	setcycle 6 repetition 9999
+	setcycle 7 Emotion neg
+	setcycle 7 Object "987.jpg"
+	setcycle 7 Scene "6213.jpg"
+	setcycle 7 TBF_ID 9999
+	setcycle 7 TBR_ID 94
+	setcycle 7 Trial_ID filler
+	setcycle 7 condition neg
+	setcycle 7 exp_ID IMDF_scanner
+	setcycle 7 filler yes
+	setcycle 7 neg_ID 9999
+	setcycle 7 neu_ID 94
+	setcycle 7 null_ID 128
+	setcycle 7 order 5
+	setcycle 7 repetition 9999
 	run IMDF_fMRI_trialsequence_practice
 
 define sketchpad IMDF_fMRI_fixation
@@ -399,7 +501,7 @@ define sequence experiment
 	run get_ready always
 	run wait_for_five_t_presses always
 	run TNTF_fMRI never
-	run IMDF_fMRI_blockloop_practice never
+	run IMDF_fMRI_blockloop_practice always
 	run get_ready always
 	run wait_for_five_t_presses always
 	run end always
@@ -558,8 +660,7 @@ define inline_script wait_for_five_t_presses
 
 define inline_script wait_for_five_t_presses_initial
 	set description "Executes Python code"
-	set _run ""
-	___prepare__
+	___run__
 	# Init keyboard object
 	my_keyboard = Keyboard()
 	
@@ -583,6 +684,7 @@ define inline_script wait_for_five_t_presses_initial
 	    if t_count >= 5:
 	        break
 	__end__
+	set _prepare ""
 
 define sketchpad welcome
 	set duration keypress
